@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.8.1">
+<meta name="app-version" content="0.8.2">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -60,11 +60,14 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .soon p{margin:0;font-size:1.7rem;color:#c9d4e6}
 #status{position:absolute;right:1.4rem;bottom:.25rem;font-size:1.05rem;color:#8da2c4;opacity:.55}
 /* Блок «Повітряна тривога» */
-#alertcard{flex:1 1 0;min-height:0;margin-top:.7rem;padding:.5rem 1.2rem .6rem;overflow:hidden;display:flex;flex-direction:column}
+#ahead{position:absolute;left:1.2rem;top:.6rem;z-index:1;font-size:1.15rem;line-height:1.2;color:#8da2c4;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+#alertcard.alarm #ahead{color:#d9a9a9}
+.night #ahead{color:#5d6672}
+#alertcard{position:relative;flex:1 1 0;min-height:0;margin-top:.7rem;padding:.5rem 1.2rem .6rem;overflow:hidden;display:flex;flex-direction:column}
 #amain{flex:1 1 0;min-height:0;display:flex;align-items:center;justify-content:center}
 #amap{flex:none;display:none}
 #amap svg{display:block}
-#alist{flex:1;min-width:0;align-self:flex-start;margin:.6rem 0 0 1.2rem;max-height:100%;font-size:1.25rem;color:#9fb2d1;line-height:1.3;overflow:hidden;word-wrap:break-word}
+#alist{flex:1;min-width:0;align-self:flex-start;margin:.5rem 0 0 1.2rem;max-height:100%;font-size:1.25rem;color:#9fb2d1;line-height:1.3;overflow:hidden;word-wrap:break-word}
 #alist b{display:block;font-weight:400;color:#8da2c4;text-transform:uppercase;letter-spacing:.04em;font-size:1.05rem;margin-bottom:.25rem;line-height:1.2}
 #alist.big{font-size:2rem;margin:0;align-self:center;text-align:center}
 #aline{flex:none;font-size:1.9rem;line-height:1.2;color:#6ee7a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:.3rem;text-align:center}
@@ -208,6 +211,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
       </div>
       </div>
       <div class="card" id="alertcard">
+        <div id="ahead"></div>
         <div id="amain"><div id="amap"></div><div id="alist"></div></div>
         <div id="aline"><span id="astat"></span><span id="asub"></span></div>
       </div>
@@ -242,7 +246,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.8.1';
+  var APP_VERSION = '0.8.2';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
@@ -659,46 +663,45 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
   function shortName(n) { return n.length > 10 ? n.substr(0, 9) + '.' : n; }
   function listHtml(names, own, wRem, hRem) {
     var f = names.length <= 4 ? 1.25 : (names.length <= 8 ? 1.1 : 1.0), cpl, lines, budget, used = 0, out = [], i, nm, head;
-    cpl = Math.floor(wRem / (f * 0.5)); lines = Math.floor((hRem - 2.2) / (f * 1.3));
+    cpl = Math.floor(wRem / (f * 0.5)); lines = Math.floor((hRem - 0.8) / (f * 1.3));
     budget = Math.max(10, cpl * lines) - 8;
     for (i = 0; i < names.length; i++) {
       nm = names.length > 4 ? shortName(names[i]) : names[i];
       if (used + nm.length + 2 > budget && i > 0) break;
       out.push(nm); used += nm.length + 2;
     }
-    head = (own ? 'Тривога також' : 'Тривога в областях') + ' (' + names.length + ')';
-    return '<span style="font-size:' + f + 'rem"><b>' + head + '</b>' + esc(out.join(', ')) + (out.length < names.length ? ' +' + (names.length - out.length) + ' ще' : '') + '</span>';
+    return '<span style="font-size:' + f + 'rem">' + esc(out.join(', ')) + (out.length < names.length ? ' +' + (names.length - out.length) + ' ще' : '') + '</span>';
   }
   function renderAlerts() {
     var card = $('alertcard'), a = alertState(), level = String(cfg.map), now = new Date().getTime() / 1000, fs = rootEl._fs || 10.8;
     var cw = card.clientWidth / fs, ch = card.clientHeight / fs;
-    var cls = 'card', stat, sub = '', other, m = null, mapW = 0, mh = '', listW, lh = '', big = false;
+    var cls = 'card', stat, sub = '', other, m = null, mapW = 0, mh = '', listW, lh = '', big = false, head = '';
     var availH = Math.max(3, ch - 1.1 - 3.4), availW = Math.max(6, cw - 2.4);
     if (level === 'auto') level = 'country';
     if (level === 'region' && a.oi < 0) level = 'country';
     other = namesOf(a, 1);
     if (a.src === 'off') {
       cls += ' dim'; stat = 'Дані про тривоги не підключено';
-      lh = '<b>Тест мапи</b>шестерня, «Вигляд і тривоги»';
+      head = 'Тест мапи: шестерня, «Вигляд і тривоги»';
     } else if (a.own) {
       cls += ' alarm'; stat = 'ТРИВОГА'; sub = ' · ' + durText(now - a.since) + ' (з ' + hhmm(a.since) + ')';
     } else {
       stat = 'Тривоги немає'; sub = ' · вже ' + durText(now - a.lastEnd);
     }
     if (a.src !== 'off') {
-      lh = other.length ? '<b>' + (a.own ? 'Тривога також' : 'Тривога в областях') + ' (' + other.length + ')</b>' + esc(other.slice(0, 14).join(', ')) + (other.length > 14 ? ' +' + (other.length - 14) + ' ще' : '') : '<b>Інші області</b>спокійно';
+      head = other.length ? (a.own ? 'Тривога також' : 'Тривога в областях') + ' (' + other.length + ')' : 'В інших областях спокійно';
     }
     if (level !== 'strip') {
       m = mapSvg(level, a, availH);
       if (m.w > availW * 0.62) m = mapSvg(level, a, availH * availW * 0.62 / m.w);
       mapW = m.w; mh = m.svg; listW = availW - mapW;
-      if (listW < 9) lh = '';                         // для списку не лишилось місця
-      else if (other.length) lh = listHtml(other, a.own, listW - 1.2, availH - 0.6);
+      if (listW >= 9 && other.length && a.src !== 'off') lh = listHtml(other, a.own, listW - 1.2, availH - 0.6);
     } else { big = true; }
     if (card.className !== cls) card.className = cls;
     setText($('astat'), stat); setText($('asub'), sub);
     var am = $('amap'); am.style.display = m ? 'block' : 'none'; setHtml(am, mh);
     var al = $('alist'); al.className = big ? 'big' : ''; setHtml(al, lh);
+    setText($('ahead'), head);
   }
 
   // ---------- Світло: джерела графіків (провайдери) ----------
