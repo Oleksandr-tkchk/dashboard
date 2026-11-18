@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.1.0">
+<meta name="app-version" content="0.2.0">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -21,7 +21,12 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 #top{flex:1 1 0;min-height:0;display:flex;flex-direction:row}
 #left{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center}
 #date{font-size:2.5rem;color:#c9d4e6;white-space:nowrap;padding-left:.4rem}
-#clock{font-size:11.5rem;line-height:1;font-weight:300;letter-spacing:-.02em;white-space:nowrap;margin:.2rem 0 .4rem}
+#clockwrap{position:relative;display:inline-block;align-self:flex-start;margin:.6rem 0 .8rem .2rem;padding:.7rem 2rem .9rem}
+#frame{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible}
+#frame path{fill:none;stroke-linecap:round}
+#frametrack{stroke:rgba(255,255,255,.14)}
+#frameprog{stroke:#5aa9ff;stroke-dasharray:100;stroke-dashoffset:100}
+#clock{position:relative;font-size:9.4rem;line-height:.9;font-weight:300;letter-spacing:-.02em;white-space:nowrap}
 #sec{font-size:3.6rem;color:#8da2c4;margin-left:.6rem;letter-spacing:0}
 #sun{display:flex;padding-left:.4rem}
 .sunitem{margin-right:2.6rem;color:#8da2c4;font-size:1.5rem}
@@ -62,7 +67,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 /* Вертикальна розкладка */
 .port #top{flex-direction:column}
 .port #left{flex:none;padding-top:1rem}
-.port #clock{font-size:10.4rem}
+.port #clock{font-size:9.4rem}
 .port #wx{flex:none;margin-left:0;margin-top:1.2rem}
 .port #bottom{flex-direction:column;height:auto}
 .port #bottom .card{margin-right:0;margin-bottom:1rem;flex:none;height:5.8rem}
@@ -72,6 +77,8 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .night,.night body{background:#000;color:#8b949e}
 .night #date,.night #sec,.night .sunitem,.night .soon h4,.night #status{color:#5d6672}
 .night .sunitem b,.night .soon p{color:#8b949e}
+.night #frametrack{stroke:rgba(255,255,255,.07)}
+.night #frameprog{stroke:#2f4d78}
 .night .card{background:#0b0f15;border:1px solid #161c25}
 .night #wx{background:#0b0f15}
 .night #wxhead,.night #nexthour,.night .stat{color:#6b7480}
@@ -87,7 +94,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   <div id="top">
     <div id="left">
       <div id="date">&nbsp;</div>
-      <div id="clock"><span id="hm">--:--</span><span id="sec"></span></div>
+      <div id="clockwrap"><svg id="frame" xmlns="http://www.w3.org/2000/svg"><path id="frametrack"/><path id="frameprog" pathLength="100"/></svg><div id="clock"><span id="hm">--:--</span><span id="sec"></span></div></div>
       <div id="sun">
         <div class="sunitem">схід<b id="sunrise">--:--</b></div>
         <div class="sunitem">захід<b id="sunset">--:--</b></div>
@@ -117,7 +124,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.1.0';
+  var APP_VERSION = '0.2.0';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
@@ -412,6 +419,39 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   }
   setInterval(checkUpdate, UPDATE_CHECK_EVERY);
 
+  // ---------- Рамка навколо годин: заповнюється по колу за 60 секунд ----------
+  var frameBox = $('clockwrap'), frameSvg = $('frame'), frameTrack = $('frametrack'), frameProg = $('frameprog');
+  var frameKey = '', frameInit = false;
+  function layoutFrame() {
+    var w = frameBox.offsetWidth, h = frameBox.offsetHeight, fs = rootEl._fs || 10.8;
+    var key = w + 'x' + h + 'x' + fs;
+    if (!w || key === frameKey) return;
+    frameKey = key;
+    var sw = fs * 0.35, i = sw / 2, W = w - sw, H = h - sw, cx = w / 2;
+    var r = Math.min(fs * 2.4, H / 2 - 1);
+    // Контур починається зверху по центру і йде за годинниковою стрілкою
+    var dd = 'M' + cx + ',' + i + ' H' + (i + W - r) + ' A' + r + ',' + r + ' 0 0 1 ' + (i + W) + ',' + (i + r) +
+      ' V' + (i + H - r) + ' A' + r + ',' + r + ' 0 0 1 ' + (i + W - r) + ',' + (i + H) +
+      ' H' + (i + r) + ' A' + r + ',' + r + ' 0 0 1 ' + i + ',' + (i + H - r) +
+      ' V' + (i + r) + ' A' + r + ',' + r + ' 0 0 1 ' + (i + r) + ',' + i + ' H' + cx;
+    frameSvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    frameTrack.setAttribute('d', dd); frameProg.setAttribute('d', dd);
+    frameTrack.setAttribute('stroke-width', sw); frameProg.setAttribute('stroke-width', sw);
+  }
+  function updateFrame(d) {
+    var sec = d.getSeconds();
+    if (!cfg.anim) { frameProg.style.strokeDashoffset = 100 - sec / 60 * 100; return; }
+    if (sec === 0 || !frameInit) {          // новий оберт: скидаємо без анімації
+      frameInit = true;
+      frameProg.style.transition = 'none';
+      frameProg.style.strokeDashoffset = 100 - sec / 60 * 100;
+      void frameProg.getBoundingClientRect();
+    }
+    // Плавно доїжджаємо до позиції наступної секунди
+    frameProg.style.transition = 'stroke-dashoffset 1s linear';
+    frameProg.style.strokeDashoffset = 100 - (sec + 1) / 60 * 100;
+  }
+
   // ---------- Годинник і щосекундний цикл ----------
   var lastMinute = -1;
   function tick() {
@@ -420,6 +460,8 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     if (cfg.secs) setText($('sec'), pad2(d.getSeconds()));
     setText($('date'), WD[d.getDay()] + ', ' + d.getDate() + ' ' + MON[d.getMonth()]);
     applyClasses(d);
+    layoutFrame();
+    updateFrame(d);
 
     if (mi !== lastMinute) {            // раз на хвилину
       lastMinute = mi;
