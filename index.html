@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.3.1">
+<meta name="app-version" content="0.3.2">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -19,7 +19,7 @@ html,body{height:100%;margin:0;background:#0a111d;color:#fff;overflow:hidden;
 body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 #app{position:absolute;top:0;right:0;bottom:0;left:0;padding:1.2rem;display:flex;flex-direction:column}
 #top{flex:1 1 0;min-height:0;display:flex;flex-direction:row}
-#left{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center}
+#left{flex:0 0 calc(50% - .6rem);width:calc(50% - .6rem);min-width:0;display:flex;flex-direction:column;justify-content:center}
 #date{font-size:2.5rem;color:#c9d4e6;white-space:nowrap;padding-left:.4rem}
 #clockwrap{position:relative;display:inline-block;align-self:flex-start;margin:.6rem 0 .8rem .2rem;padding:.7rem 2rem .9rem}
 #frame{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible}
@@ -32,7 +32,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .sunitem{margin-right:2.6rem;color:#8da2c4;font-size:1.5rem}
 .sunitem b{display:block;font-size:2.6rem;font-weight:400;color:#e6edf8;margin-top:.1rem}
 .card{background:#142038;border-radius:1.2rem;padding:.9rem 1.3rem;min-width:0}
-#wx{flex:1 1 0;margin-left:1.2rem;display:flex;flex-direction:column;
+#wx{flex:0 0 calc(50% - .6rem);width:calc(50% - .6rem);margin-left:1.2rem;display:flex;flex-direction:column;
   background:linear-gradient(160deg,#4a86d6,#2b4f8c)}
 #wxhead{display:flex;justify-content:space-between;white-space:nowrap;font-size:1.4rem;color:#d7e6ff;text-transform:uppercase;letter-spacing:.06em;min-height:1.6rem}
 #wxwarn{color:#ffd27a;text-transform:none;letter-spacing:0}
@@ -53,7 +53,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .daytemp span{color:#b9cdee}
 #wx.stale #wxmain,#wx.stale #nexthour,#wx.stale #wxdetails,#wx.stale #days{opacity:.55}
 #bottom{display:flex;flex-direction:row;margin-top:1rem;height:7.2rem;flex:none}
-#bottom .card{flex:1 1 0;margin-right:1.2rem}
+#bottom .card{flex:0 0 calc(50% - .6rem);width:calc(50% - .6rem);margin-right:1.2rem}
 #bottom .card:last-child{margin-right:0}
 .soon{border:1px dashed #33476b;background:transparent;opacity:.75}
 .soon h4{margin:0 0 .3rem;font-size:1.3rem;color:#8da2c4;text-transform:uppercase;letter-spacing:.06em;font-weight:400}
@@ -112,11 +112,11 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .anim .cloudg{animation:drift 8s ease-in-out infinite}
 /* Вертикальна розкладка */
 .port #top{flex-direction:column}
-.port #left{flex:none;padding-top:1rem}
+.port #left{flex:none;width:auto;padding-top:1rem}
 .port #clock{font-size:9.4rem}
-.port #wx{flex:none;margin-left:0;margin-top:1.2rem}
+.port #wx{flex:none;width:auto;margin-left:0;margin-top:1.2rem}
 .port #bottom{flex-direction:column;height:auto}
-.port #bottom .card{margin-right:0;margin-bottom:1rem;flex:none;height:5.8rem}
+.port #bottom .card{margin-right:0;margin-bottom:1rem;flex:none;width:auto;height:5.8rem}
 .port #bottom .card:last-child{margin-bottom:0}
 .port #bottom #powercard{height:7.8rem}
 .port #sun{justify-content:flex-start}
@@ -183,7 +183,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.3.1';
+  var APP_VERSION = '0.3.2';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
