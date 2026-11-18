@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.5.0">
+<meta name="app-version" content="0.6.0">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -210,7 +210,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.5.0';
+  var APP_VERSION = '0.6.0';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
@@ -564,26 +564,56 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     ['івано-франківська', 'ivano-frankivska-oblast'], ['рівненська', 'rivnenska-oblast'], ['тернопільська', 'ternopilska-oblast'],
     ['закарпатська', 'zakarpatska-oblast'], ['запорізька', 'zaporizka-oblast'], ['житомирська', 'zhytomyrska-oblast']
   ];
+  function toSec(v) {
+    var t;
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string') { t = Date.parse(v); return isNaN(t) ? 0 : Math.round(t / 1000); }
+    return 0;
+  }
+  // Файли у форматі GPV (fact.data -> доба -> GPV1.1 -> години 1..24). poltava: msecond = перші 30 хв точно без світла
+  function parseGpv(d, poltava) {
+    var src = (d.fact && d.fact.data) ? d.fact.data : {}, out = { updated: toSec(d.lastUpdated), ok: !(d.lastUpdateStatus && d.lastUpdateStatus.ok === false), days: {} }, k, q, cells, i;
+    for (k in src) {
+      if (!src.hasOwnProperty(k)) continue;
+      out.days[k] = {};
+      for (q in src[k]) {
+        if (q.indexOf('GPV') !== 0) continue;
+        cells = cellsOf(src[k][q]);
+        if (poltava) {
+          for (i = 1; i <= 24; i++) { if (src[k][q][String(i)] === 'msecond') cells[2 * (i - 1)] = 'r'; }
+        }
+        out.days[k][q.substr(3)] = cells;
+      }
+    }
+    return out;
+  }
+  var RAW = 'https://raw.githubusercontent.com/';
+  var OE = RAW + 'yaroslav2901/OE_OUTAGE_DATA/main/data/', BK = RAW + 'Baskerville42/outage-data-ua/main/data/';
+  // Початок назви області -> окремий файл обленерго (якщо є); решта береться з агрегатора
+  var OWN_FILES = [
+    ['київська', BK + 'kyiv-region.json'], ['одеська', BK + 'odesa.json'], ['дніпропетровська', BK + 'dnipro.json'],
+    ['львівська', OE + 'Lvivoblenerho.json'], ['полтавська', OE + 'Poltavaoblenergo.json', 1], ['чернігівська', OE + 'Chernihivoblenergo.json'],
+    ['хмельницька', OE + 'Khmelnytskoblenerho.json'], ['івано-франківська', OE + 'Prykarpattiaoblenerho.json'], ['рівненська', OE + 'Rivneoblenergo.json'],
+    ['тернопільська', OE + 'Ternopiloblenerho.json'], ['закарпатська', OE + 'Zakarpattiaoblenerho.json'], ['запорізька', OE + 'Zaporizhzhiaoblenergo.json'],
+    ['житомирська', OE + 'Zhytomyroblenergo.json']
+  ];
+  function ownFile(c) {
+    var r = (c.region || '').toLowerCase(), i;
+    for (i = 0; i < OWN_FILES.length; i++) { if (r.indexOf(OWN_FILES[i][0]) === 0) return OWN_FILES[i]; }
+    return null;
+  }
   var PROVIDERS = [{
     id: 'voe',
     name: 'Вінницяобленерго',
     queues: QUEUES,
     match: function (c) { return /вінниц/i.test(c.region || ''); },
     url: 'https://raw.githubusercontent.com/vn-progr/gpv-voe-vinnytsia/main/data/Vinnytsiaoblenerho.json',
-    parse: function (d) {
-      var src = (d.fact && d.fact.data) ? d.fact.data : {}, out = { updated: d.lastUpdated || 0, ok: !(d.lastUpdateStatus && d.lastUpdateStatus.ok === false), days: {} }, k, q;
-      for (k in src) {
-        if (!src.hasOwnProperty(k)) continue;
-        out.days[k] = {};
-        for (q in src[k]) { if (q.indexOf('GPV') === 0) out.days[k][q.substr(3)] = cellsOf(src[k][q]); }
-      }
-      return out;
-    }
+    parse: function (d) { return parseGpv(d, false); }
   }, {
     // Агрегатор https://github.com/chaichuk/UA-power-outages-monitor (15 областей, пів години: 1 = світло є, 2 = немає)
     // Можливі відключення в ньому об'єднані зі «світло є», часу оновлення в файлі немає
     id: 'uapom',
-    name: 'UA Power Outages Monitor',
+    name: 'відкриті дані (GitHub)',
     queues: QUEUES,
     every: 15 * 60 * 1000,                  // файл великий (~300 КБ), тож оновлюємо рідше
     slug: function (c) {
@@ -593,9 +623,16 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     },
     match: function (c) { return this.slug(c) !== ''; },
     key: function (c) { return this.slug(c); },
-    url: 'https://raw.githubusercontent.com/chaichuk/UA-power-outages-monitor/main/artifacts/last-message.json',
-    parse: function (d, c) {
-      var slug = this.slug(c), regs = d.regions || [], out = { updated: 0, ok: true, days: {} }, i, q, date, reg = null, slots, cells, j, key, ts;
+    // Джерела за пріоритетом: спершу окремий файл обленерго, потім агрегатор; береться найсвіжіший із чинних
+    sources: function (c) {
+      var own = ownFile(c), list = [];
+      if (own) list.push({ url: own[1], parse: function (d) { return parseGpv(d, !!own[2]); } });
+      list.push({ url: this.url, parse: this.parseAgg });
+      return list;
+    },
+    url: RAW + 'chaichuk/UA-power-outages-monitor/main/artifacts/last-message.json',
+    parseAgg: function (d, c) {
+      var slug = PROVIDERS[1].slug(c), regs = d.regions || [], out = { updated: 0, ok: true, days: {} }, i, q, date, reg = null, slots, cells, j, key, ts;
       for (i = 0; i < regs.length; i++) { if (regs[i].cpu === slug) reg = regs[i]; }
       if (!reg || !reg.schedule) return null;
       for (q in reg.schedule) {
@@ -628,24 +665,55 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   }
   loadPwCache();
 
+  // Чи є в даних сьогоднішня або завтрашня доба (за київським часом)
+  function hasFresh(n, q) {
+    var nowSec = new Date().getTime() / 1000, k, v;
+    for (k in n.days) {
+      if (!n.days.hasOwnProperty(k)) continue;
+      v = parseInt(k, 10);
+      if (v + 86400 > nowSec && v < nowSec + 86400 && (!q || n.days[k][q])) return true;
+    }
+    return false;
+  }
+  // Із кількох відповідей обираємо чинну (є сьогодні/завтра) з найпізнішою міткою оновлення; рівні мітки - за пріоритетом
+  function pickBest(list) {
+    var best = null, i, a, ts, bts;
+    for (i = 0; i < list.length; i++) {
+      a = list[i];
+      if (!a) continue;
+      if (!best) { best = a; continue; }
+      ts = a.ts || 0; bts = best.ts || 0;
+      if (hasFresh(a, cfg.queue) && !hasFresh(best, cfg.queue)) best = a;
+      else if (hasFresh(a, cfg.queue) === hasFresh(best, cfg.queue) && ts > bts) best = a;
+    }
+    return best;
+  }
   function loadPower() {
     if (pwTimer) { clearTimeout(pwTimer); pwTimer = null; }
     if (!prov) { renderPower(); return; }
     var cur = prov, curKey = provKey(), every = cur.every || POWER_EVERY;
-    getJSON(cur.url + (cur.url.indexOf('?') < 0 ? '?' : '&') + '_=' + Math.floor(new Date().getTime() / 300000), function (d) {
+    var srcs = cur.sources ? cur.sources(cfg) : [{ url: cur.url, parse: cur.parse }];
+    var left = srcs.length, results = [], i, bucket = Math.floor(new Date().getTime() / 300000);
+    function done() {
+      if (--left > 0) return;
       if (curKey !== provKey()) return;            // за цей час змінили місто або регіон
-      var n = null;
-      try { n = cur.parse(d, cfg); } catch (e) { n = null; }
+      var n = pickBest(results);
       if (!n) { renderPower(); pwTimer = setTimeout(loadPower, POWER_RETRY); return; }
       pw = { fetchedAt: new Date().getTime(), data: n };
       lsSet(STORE_PW + '_' + curKey, JSON.stringify(pw));
       renderPower();
       pwTimer = setTimeout(loadPower, every);
-    }, function () {
-      if (curKey !== provKey()) return;
-      renderPower();
-      pwTimer = setTimeout(loadPower, POWER_RETRY);
-    });
+    }
+    function one(idx) {
+      var sr = srcs[idx];
+      getJSON(sr.url + (sr.url.indexOf('?') < 0 ? '?' : '&') + '_=' + bucket, function (d) {
+        var n = null;
+        try { n = sr.parse(d, cfg); } catch (e) { n = null; }
+        if (n) { n.ts = n.updated; if (idx > 0 || srcs.length > 1) n.updated = 0; results[idx] = n; }
+        done();
+      }, function () { done(); });
+    }
+    for (i = 0; i < srcs.length; i++) one(i);
   }
   function barHtml(cells, cur) {
     var h = '', i, c;
