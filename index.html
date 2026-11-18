@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<title>Дашборд</title>
+<!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
+<meta name="app-version" content="0.1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a111d">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* Базовий розмір шрифту залежить від меншої сторони екрана, тому все масштабується під будь-який пристрій */
+html{font-size:3vmin}
+html,body{height:100%;margin:0;background:#0a111d;color:#fff;overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%;cursor:default}
+body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
+#app{position:absolute;top:0;right:0;bottom:0;left:0;padding:1.2rem;display:flex;flex-direction:column}
+#top{flex:1 1 0;min-height:0;display:flex;flex-direction:row}
+#left{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center}
+#date{font-size:2.5rem;color:#c9d4e6;white-space:nowrap;padding-left:.4rem}
+#clock{font-size:11.5rem;line-height:1;font-weight:300;letter-spacing:-.02em;white-space:nowrap;margin:.2rem 0 .4rem}
+#sec{font-size:3.6rem;color:#8da2c4;margin-left:.6rem;letter-spacing:0}
+#sun{display:flex;padding-left:.4rem}
+.sunitem{margin-right:2.6rem;color:#8da2c4;font-size:1.5rem}
+.sunitem b{display:block;font-size:2.6rem;font-weight:400;color:#e6edf8;margin-top:.1rem}
+.card{background:#142038;border-radius:1.2rem;padding:1rem 1.3rem;min-width:0}
+#wx{flex:1 1 0;margin-left:1.2rem;display:flex;flex-direction:column;
+  background:linear-gradient(160deg,#4a86d6,#2b4f8c)}
+#wxhead{display:flex;justify-content:space-between;white-space:nowrap;font-size:1.4rem;color:#d7e6ff;text-transform:uppercase;letter-spacing:.06em;min-height:1.6rem}
+#wxwarn{color:#ffd27a;text-transform:none;letter-spacing:0}
+#wxmain{display:flex;align-items:center;margin-top:.2rem}
+#wxicon{width:6rem;height:6rem;flex:none}
+#wxicon svg,.dayicon svg{width:100%;height:100%;display:block}
+#temp{font-size:6.2rem;font-weight:300;line-height:1;margin-left:1rem;white-space:nowrap}
+#nexthour{font-size:1.6rem;color:#d7e6ff;margin-top:.2rem;min-height:2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#wxdetails{display:flex;margin-top:.6rem;padding-top:.6rem;border-top:1px solid rgba(255,255,255,.25)}
+.stat{flex:1;font-size:1.3rem;color:#d7e6ff;white-space:nowrap}
+.stat:first-child{flex:1.35}
+.stat b{display:block;font-size:2.2rem;font-weight:400;color:#fff}
+#days{margin-top:.5rem;padding-top:.3rem;border-top:1px solid rgba(255,255,255,.25)}
+.day{display:flex;align-items:center;height:2.8rem;font-size:2.1rem}
+.dayname{flex:1}
+.dayicon{width:2.6rem;height:2.6rem;margin:0 1rem}
+.daytemp{min-width:7rem;text-align:right}
+.daytemp span{color:#b9cdee}
+#wx.stale #wxmain,#wx.stale #nexthour,#wx.stale #wxdetails,#wx.stale #days{opacity:.55}
+#bottom{display:flex;flex-direction:row;margin-top:1rem;height:5.8rem;flex:none}
+#bottom .card{flex:1 1 0;margin-right:1.2rem}
+#bottom .card:last-child{margin-right:0}
+.soon{border:1px dashed #33476b;background:transparent;opacity:.75}
+.soon h4{margin:0 0 .3rem;font-size:1.3rem;color:#8da2c4;text-transform:uppercase;letter-spacing:.06em;font-weight:400}
+.soon p{margin:0;font-size:1.7rem;color:#c9d4e6}
+#status{position:absolute;right:1.4rem;bottom:.25rem;font-size:1.05rem;color:#8da2c4;opacity:.55}
+/* Анімація значків (вимикається параметром anim=0) */
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes drift{0%{transform:translateX(-1.5px)}50%{transform:translateX(1.5px)}100%{transform:translateX(-1.5px)}}
+.anim .rays{transform-origin:32px 32px;animation:spin 40s linear infinite}
+.anim .cloudg{animation:drift 8s ease-in-out infinite}
+/* Вертикальна розкладка */
+.port #top{flex-direction:column}
+.port #left{flex:none;padding-top:1rem}
+.port #clock{font-size:10.4rem}
+.port #wx{flex:none;margin-left:0;margin-top:1.2rem}
+.port #bottom{flex-direction:column;height:auto}
+.port #bottom .card{margin-right:0;margin-bottom:1rem;flex:none;height:5.8rem}
+.port #bottom .card:last-child{margin-bottom:0}
+.port #sun{justify-content:flex-start}
+/* Нічний режим */
+.night,.night body{background:#000;color:#8b949e}
+.night #date,.night #sec,.night .sunitem,.night .soon h4,.night #status{color:#5d6672}
+.night .sunitem b,.night .soon p{color:#8b949e}
+.night .card{background:#0b0f15;border:1px solid #161c25}
+.night #wx{background:#0b0f15}
+.night #wxhead,.night #nexthour,.night .stat{color:#6b7480}
+.night .stat b,.night #temp,.night .day{color:#9aa3ad}
+.night .daytemp span{color:#5d6672}
+.night #wxdetails,.night #days{border-top-color:#1b222c}
+.night .soon{background:transparent;border:1px dashed #1f2733}
+.night #wxicon svg,.night .dayicon svg{-webkit-filter:brightness(.55) saturate(.6);filter:brightness(.55) saturate(.6)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <div id="left">
+      <div id="date">&nbsp;</div>
+      <div id="clock"><span id="hm">--:--</span><span id="sec"></span></div>
+      <div id="sun">
+        <div class="sunitem">схід<b id="sunrise">--:--</b></div>
+        <div class="sunitem">захід<b id="sunset">--:--</b></div>
+        <div class="sunitem">день<b id="daylen">--:--</b></div>
+      </div>
+    </div>
+    <div id="wx" class="card">
+      <div id="wxhead"><span id="city"></span><span id="wxwarn"></span></div>
+      <div id="wxmain"><div id="wxicon"></div><div id="temp">--°</div></div>
+            <div id="nexthour"></div>
+      <div id="wxdetails">
+        <div class="stat"><b id="feels">--°</b>відчувається</div>
+        <div class="stat"><b id="wind">--</b>вітер</div>
+        <div class="stat"><b id="hum">--%</b>вологість</div>
+      </div>
+      <div id="days"></div>
+    </div>
+  </div>
+  <div id="bottom">
+    <div class="card soon" id="alertcard"><h4>Повітряна тривога</h4><p>Буде на наступному кроці</p></div>
+    <div class="card soon" id="powercard"><h4>Світло</h4><p>Буде на наступному кроці</p></div>
+  </div>
+  <div id="status"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var APP_VERSION = '0.1.0';
+
+  // ---------- Налаштування ----------
+  // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
+  // Після цього вони запам'ятовуються на пристрої. Скинути: ?reset=1
+  // view: auto | land | port    night: auto | on | off | 22:00-07:00    secs: 0|1    anim: 0|1
+  var DEFAULTS = { name: 'Вінниця', lat: 49.2331, lon: 28.4682, view: 'auto', night: 'auto', secs: 0, anim: 1 };
+  var STORE_CFG = 'wd_cfg', STORE_WX = 'wd_weather', STORE_RELOAD = 'wd_reload_day';
+
+  var WEATHER_EVERY = 10 * 60 * 1000;   // оновлення погоди раз на 10 хв
+  var WEATHER_RETRY = 60 * 1000;        // повтор після помилки
+  var STALE_AFTER = 30 * 60 * 1000;     // після цього дані вважаються застарілими
+  var UPDATE_CHECK_EVERY = 5 * 60 * 1000; // перевірка нової версії сторінки
+
+  var WD = ['неділя', 'понеділок', 'вівторок', 'середа', 'четвер', "п'ятниця", 'субота'];
+  var MON = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
+
+  function $(id) { return document.getElementById(id); }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function setText(el, v) { if (el._v !== v) { el._v = v; el.textContent = v; } }
+  function setHtml(el, v) { if (el._h !== v) { el._h = v; el.innerHTML = v; } }
+  function lsGet(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { window.localStorage.setItem(k, v); } catch (e) {} }
+  function lsDel(k) { try { window.localStorage.removeItem(k); } catch (e) {} }
+
+  // ---------- Читання налаштувань ----------
+  function parseQuery() {
+    var out = {}, s = window.location.search.replace(/^\?/, '');
+    if (!s) return out;
+    var parts = s.split('&');
+    for (var i = 0; i < parts.length; i++) {
+      var kv = parts[i].split('=');
+      try { out[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || '').replace(/\+/g, ' ')); } catch (e) {}
+    }
+    return out;
+  }
+  function coerce(k, v) {
+    if (k === 'lat' || k === 'lon') { var f = parseFloat(v); return isNaN(f) ? DEFAULTS[k] : f; }
+    if (k === 'secs' || k === 'anim') { return parseInt(v, 10) ? 1 : 0; }
+    return v;
+  }
+  function loadCfg() {
+    var cfg = {}, k;
+    for (k in DEFAULTS) { if (DEFAULTS.hasOwnProperty(k)) cfg[k] = DEFAULTS[k]; }
+    var q = parseQuery();
+    if (q.reset === '1') { lsDel(STORE_CFG); lsDel(STORE_WX); return cfg; }
+    var stored = null;
+    try { stored = JSON.parse(lsGet(STORE_CFG) || 'null'); } catch (e) {}
+    if (stored) { for (k in stored) { if (DEFAULTS.hasOwnProperty(k)) cfg[k] = stored[k]; } }
+    var changed = false;
+    for (k in DEFAULTS) {
+      if (DEFAULTS.hasOwnProperty(k) && q.hasOwnProperty(k)) { cfg[k] = coerce(k, q[k]); changed = true; }
+    }
+    if (changed) lsSet(STORE_CFG, JSON.stringify(cfg));
+    return cfg;
+  }
+  var cfg = loadCfg();
+
+  // ---------- Значки погоди (вбудовані SVG, без зовнішніх файлів) ----------
+  var CLOUD = '<path d="M20 48h27a11 11 0 0 0 1.6-21.9A15 15 0 0 0 19.6 29 10 10 0 0 0 20 48z" fill="#e3e9f2"/>';
+  var CLOUD_BACK = '<path d="M20 48h27a11 11 0 0 0 1.6-21.9A15 15 0 0 0 19.6 29 10 10 0 0 0 20 48z" fill="#9aa8bd"/>';
+  function sunShape() {
+    var s = '<g class="rays" stroke="#ffc83d" stroke-width="3.2" stroke-linecap="round">', a;
+    for (a = 0; a < 360; a += 45) { s += '<line x1="32" y1="9" x2="32" y2="15" transform="rotate(' + a + ' 32 32)"/>'; }
+    return s + '</g><circle cx="32" cy="32" r="11" fill="#ffc83d"/>';
+  }
+  var MOON = '<path d="M40 10A22 22 0 1 0 54 42 17 17 0 0 1 40 10z" fill="#dfe6f2"/>';
+  function cloudG(t) { return '<g class="cloudg"' + (t ? ' transform="' + t + '"' : '') + '>' + CLOUD + '</g>'; }
+
+  // Код погоди Open-Meteo -> текст і тип значка
+  function wxInfo(c) {
+    if (c === 0) return { t: 'Ясно', k: 'clear' };
+    if (c === 1) return { t: 'Переважно ясно', k: 'clear' };
+    if (c === 2) return { t: 'Мінлива хмарність', k: 'partly' };
+    if (c === 3) return { t: 'Хмарно', k: 'cloud' };
+    if (c === 45 || c === 48) return { t: 'Туман', k: 'fog' };
+    if (c >= 51 && c <= 55) return { t: 'Мряка', k: 'rain' };
+    if (c === 56 || c === 57) return { t: 'Крижана мряка', k: 'rain' };
+    if (c === 61) return { t: 'Невеликий дощ', k: 'rain' };
+    if (c === 63) return { t: 'Дощ', k: 'rain' };
+    if (c === 65) return { t: 'Сильний дощ', k: 'rain' };
+    if (c === 66 || c === 67) return { t: 'Крижаний дощ', k: 'rain' };
+    if (c === 71) return { t: 'Невеликий сніг', k: 'snow' };
+    if (c === 73) return { t: 'Сніг', k: 'snow' };
+    if (c === 75) return { t: 'Сильний сніг', k: 'snow' };
+    if (c === 77) return { t: 'Снігова крупа', k: 'snow' };
+    if (c >= 80 && c <= 82) return { t: 'Злива', k: 'rain' };
+    if (c === 85 || c === 86) return { t: 'Снігопад', k: 'snow' };
+    if (c === 95) return { t: 'Гроза', k: 'thunder' };
+    if (c === 96 || c === 99) return { t: 'Гроза з градом', k: 'thunder' };
+    return { t: '—', k: 'cloud' };
+  }
+  function iconSvg(code, isDay) {
+    var k = wxInfo(code).k, g = '';
+    if (k === 'clear') g = isDay ? sunShape() : MOON;
+    else if (k === 'partly') {
+      g = (isDay ? '<g transform="translate(-6 -7) scale(.8)">' + sunShape() + '</g>' : '<g transform="translate(-6 -7) scale(.8)">' + MOON + '</g>') + cloudG('translate(5 6)');
+    }
+    else if (k === 'cloud') g = '<g transform="translate(-7 -8) scale(.85)">' + CLOUD_BACK + '</g>' + cloudG('translate(4 3)');
+    else if (k === 'fog') g = '<g stroke="#b6c1d2" stroke-width="4" stroke-linecap="round"><line x1="12" y1="22" x2="46" y2="22"/><line x1="18" y1="32" x2="54" y2="32"/><line x1="12" y1="42" x2="46" y2="42"/><line x1="20" y1="52" x2="50" y2="52"/></g>';
+    else if (k === 'rain') g = cloudG('translate(0 -6)') + '<g stroke="#5aa9ff" stroke-width="3.4" stroke-linecap="round"><line x1="24" y1="48" x2="21" y2="57"/><line x1="34" y1="48" x2="31" y2="57"/><line x1="44" y1="48" x2="41" y2="57"/></g>';
+    else if (k === 'snow') g = cloudG('translate(0 -6)') + '<g fill="#ffffff"><circle cx="24" cy="51" r="2.8"/><circle cx="34" cy="56" r="2.8"/><circle cx="44" cy="51" r="2.8"/></g>';
+    else if (k === 'thunder') g = cloudG('translate(0 -8)') + '<polygon points="35,38 26,52 33,52 30,63 43,46 36,46 40,38" fill="#ffc83d"/>';
+    return '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' + g + '</svg>';
+  }
+
+  // ---------- Допоміжне форматування ----------
+  function fmtTemp(v) {
+    var n = Math.round(v);
+    return (n > 0 ? '+' + n : (n < 0 ? '−' + Math.abs(n) : '0')) + '°';
+  }
+  function hmOf(iso) { return iso.substr(11, 5); }               // "2026-11-18T07:12" -> "07:12"
+  function minOf(iso) { return parseInt(iso.substr(11, 2), 10) * 60 + parseInt(iso.substr(14, 2), 10); }
+  function dayStr(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function indexOf(arr, v) { for (var i = 0; i < arr.length; i++) { if (arr[i] === v) return i; } return -1; }
+
+  // ---------- Мережа ----------
+  function getJSON(url, ok, fail) {
+    var x = new XMLHttpRequest(), done = false;
+    function end(good, data) { if (done) return; done = true; if (good) ok(data); else fail(); }
+    x.open('GET', url, true);
+    x.timeout = 20000;
+    x.onload = function () {
+      if (x.status === 200) { try { end(true, JSON.parse(x.responseText)); } catch (e) { end(false); } }
+      else end(false);
+    };
+    x.onerror = function () { end(false); };
+    x.ontimeout = function () { end(false); };
+    x.send();
+  }
+
+  // ---------- Погода ----------
+  var wx = null; // { fetchedAt, data }
+  try { wx = JSON.parse(lsGet(STORE_WX) || 'null'); } catch (e) { wx = null; }
+  var sunRise = null, sunSet = null; // у хвилинах від початку доби
+
+  function weatherUrl() {
+    return 'https://api.open-meteo.com/v1/forecast?latitude=' + cfg.lat + '&longitude=' + cfg.lon +
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,is_day' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset' +
+      '&minutely_15=precipitation&wind_speed_unit=ms&timezone=auto&forecast_days=3';
+  }
+  function loadWeather() {
+    getJSON(weatherUrl(), function (d) {
+      wx = { fetchedAt: new Date().getTime(), data: d };
+      lsSet(STORE_WX, JSON.stringify(wx));
+      renderWeather();
+      setTimeout(loadWeather, WEATHER_EVERY);
+    }, function () {
+      renderWeather();
+      setTimeout(loadWeather, WEATHER_RETRY);
+    });
+  }
+
+  // Опади на найближчу годину: беремо 4 кроки по 15 хв, починаючи з поточного
+  function nextHourText(d) {
+    if (!d.minutely_15 || !d.current) return '';
+    var t = d.minutely_15.time, p = d.minutely_15.precipitation, now = d.current.time, i0 = -1, i;
+    for (i = 0; i < t.length; i++) { if (t[i] <= now) i0 = i; }
+    if (i0 < 0) return '';
+    for (i = i0; i < i0 + 4 && i < t.length; i++) {
+      if (p[i] >= 0.05) {
+        return i === i0 ? 'Опади зараз' : 'Опади близько ' + hmOf(t[i]);
+      }
+    }
+    return 'Найближчу годину без опадів';
+  }
+
+  function renderWeather() {
+    var el = $('city');
+    setText(el, cfg.name);
+    if (!wx || !wx.data || !wx.data.current) return;
+    var d = wx.data, c = d.current, daily = d.daily;
+    var info = wxInfo(c.weather_code), isDay = c.is_day === 1;
+
+    setHtml($('wxicon'), iconSvg(c.weather_code, isDay));
+    setText($('temp'), fmtTemp(c.temperature_2m));
+    setText($('city'), cfg.name + ' \u00B7 ' + info.t);
+    setText($('nexthour'), nextHourText(d));
+    setText($('feels'), fmtTemp(c.apparent_temperature));
+    setText($('wind'), Math.round(c.wind_speed_10m) + ' м/с');
+    setText($('hum'), Math.round(c.relative_humidity_2m) + '%');
+
+    // Індекс сьогоднішнього дня в прогнозі (на випадок, якщо дані з кешу вчорашні)
+    var ti = indexOf(daily.time, dayStr(new Date()));
+    if (ti < 0) ti = 0;
+
+    // Схід/захід
+    if (daily.sunrise && daily.sunrise[ti]) {
+      sunRise = minOf(daily.sunrise[ti]); sunSet = minOf(daily.sunset[ti]);
+      setText($('sunrise'), hmOf(daily.sunrise[ti]));
+      setText($('sunset'), hmOf(daily.sunset[ti]));
+      var len = sunSet - sunRise;
+      setText($('daylen'), Math.floor(len / 60) + ':' + pad2(len % 60));
+    }
+
+    // Прогноз на 2 дні
+    var html = '', j, di, parts, dt, name;
+    for (j = 1; j <= 2; j++) {
+      di = ti + j;
+      if (!daily.time[di]) continue;
+      parts = daily.time[di].split('-');
+      dt = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      name = j === 1 ? 'Завтра' : cap(WD[dt.getDay()]);
+      html += '<div class="day"><div class="dayname">' + name + '</div><div class="dayicon">' +
+        iconSvg(daily.weather_code[di], true) + '</div><div class="daytemp">' +
+        fmtTemp(daily.temperature_2m_max[di]) + ' <span>' + fmtTemp(daily.temperature_2m_min[di]) + '</span></div></div>';
+    }
+    setHtml($('days'), html);
+
+    // Застарілі дані
+    var age = new Date().getTime() - wx.fetchedAt, stale = age > STALE_AFTER;
+    var box = $('wx');
+    if (stale && box.className.indexOf('stale') < 0) box.className += ' stale';
+    if (!stale) box.className = box.className.replace(/\s*stale/g, '');
+    var ft = new Date(wx.fetchedAt);
+    setText($('wxwarn'), stale ? 'дані застаріли · ' + pad2(ft.getHours()) + ':' + pad2(ft.getMinutes()) : '');
+  }
+
+  // ---------- Нічний режим ----------
+  function isNight(d) {
+    var mode = String(cfg.night), now = d.getHours() * 60 + d.getMinutes();
+    if (mode === 'on') return true;
+    if (mode === 'off') return false;
+    var m = /^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/.exec(mode), a, b;
+    if (m) {
+      a = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+      b = parseInt(m[3], 10) * 60 + parseInt(m[4], 10);
+    } else if (sunRise !== null && sunSet !== null) {
+      a = sunSet; b = sunRise;               // від заходу до сходу сонця
+    } else { a = 22 * 60; b = 7 * 60; }      // поки немає даних про сонце
+    return a <= b ? (now >= a && now < b) : (now >= a || now < b);
+  }
+
+  // ---------- Орієнтація та класи ----------
+  var rootEl = document.documentElement;
+  function applyClasses(d) {
+    var port = cfg.view === 'port' || (cfg.view !== 'land' && window.innerHeight > window.innerWidth);
+    var cls = (port ? 'port' : 'land') + (isNight(d) ? ' night' : '') + (cfg.anim ? ' anim' : '');
+    if (rootEl.className !== cls) rootEl.className = cls;
+    // Масштаб: макет розрахований на 70x33.3 rem (горизонтально) або 33.3x70 rem (вертикально)
+    var w = window.innerWidth, h = window.innerHeight;
+    var fs = port ? Math.min(w / 33.3, h / 70) : Math.min(w / 70, h / 33.3);
+    fs = Math.round(fs * 100) / 100;
+    if (fs > 0 && rootEl._fs !== fs) { rootEl._fs = fs; rootEl.style.fontSize = fs + 'px'; }
+  }
+
+  // ---------- Екран не гасне ----------
+  var wlOk = false;
+  function lockScreen() {
+    if (navigator.wakeLock && navigator.wakeLock.request) {
+      navigator.wakeLock.request('screen').then(function (l) {
+        wlOk = true; updateStatus();
+        l.addEventListener('release', function () { wlOk = false; updateStatus(); });
+      }, function () { wlOk = false; updateStatus(); });
+    }
+  }
+  function updateStatus() {
+    setText($('status'), (wlOk ? '●' : '○') + ' v' + APP_VERSION);
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) lockScreen(); });
+
+  // Подвійний дотик: повноекранний режим
+  function toggleFs() {
+    var d = document, e = d.documentElement;
+    if (!(d.fullscreenElement || d.webkitFullscreenElement)) {
+      (e.requestFullscreen || e.webkitRequestFullscreen || function () {}).call(e);
+    } else {
+      (d.exitFullscreen || d.webkitExitFullscreen || function () {}).call(d);
+    }
+  }
+  var lastTap = 0;
+  document.addEventListener('click', function () {
+    var n = new Date().getTime();
+    if (n - lastTap < 400) toggleFs();
+    lastTap = n;
+    if (!wlOk) lockScreen();
+  });
+
+  // ---------- Автооновлення самої сторінки ----------
+  // Раз на 5 хв дивимось, чи на сервері не з'явилась нова версія index.html
+  function checkUpdate() {
+    var x = new XMLHttpRequest();
+    x.open('GET', window.location.pathname + '?_=' + new Date().getTime(), true);
+    x.onload = function () {
+      if (x.status !== 200) return;
+      var m = /name="app-version" content="([^"]+)"/.exec(x.responseText);
+      if (m && m[1] !== APP_VERSION) window.location.reload();
+    };
+    x.onerror = function () {};
+    x.send();
+  }
+  setInterval(checkUpdate, UPDATE_CHECK_EVERY);
+
+  // ---------- Годинник і щосекундний цикл ----------
+  var lastMinute = -1;
+  function tick() {
+    var d = new Date(), mi = d.getMinutes();
+    setText($('hm'), pad2(d.getHours()) + ':' + pad2(mi));
+    if (cfg.secs) setText($('sec'), pad2(d.getSeconds()));
+    setText($('date'), WD[d.getDay()] + ', ' + d.getDate() + ' ' + MON[d.getMonth()]);
+    applyClasses(d);
+
+    if (mi !== lastMinute) {            // раз на хвилину
+      lastMinute = mi;
+      renderWeather();
+      if (!wlOk) lockScreen();
+      // Нічне перезавантаження о 04:00 проти витоків пам'яті (раз на добу)
+      if (d.getHours() === 4 && mi === 0 && lsGet(STORE_RELOAD) !== dayStr(d)) {
+        lsSet(STORE_RELOAD, dayStr(d));
+        window.location.reload();
+        return;
+      }
+    }
+    setTimeout(tick, 1000 - (d.getTime() % 1000) + 20);
+  }
+
+  // ---------- Старт ----------
+  if (!cfg.secs) $('sec').style.display = 'none';
+  updateStatus();
+  renderWeather();   // одразу малюємо кеш, якщо він є
+  tick();
+  loadWeather();
+  lockScreen();
+})();
+</script>
+</body>
+</html>
