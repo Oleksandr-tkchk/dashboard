@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.7.0">
+<meta name="app-version" content="0.8.0">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -19,20 +19,22 @@ html,body{height:100%;margin:0;background:#0a111d;color:#fff;overflow:hidden;
 body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 #app{position:absolute;top:0;right:0;bottom:0;left:0;padding:1.2rem;display:flex;flex-direction:column}
 #top{flex:1 1 0;min-height:0;display:flex;flex-direction:row}
-#left{flex:0 0 calc(50% - .6rem);width:calc(50% - .6rem);min-width:0;display:flex;flex-direction:column;justify-content:center}
+#left{flex:0 0 calc(50% - .6rem);width:calc(50% - .6rem);min-width:0;display:flex;flex-direction:column}
+#right{flex:0 0 calc(50% - .6rem);width:calc(50% - .6rem);margin-left:1.2rem;min-width:0;display:flex;flex-direction:column}
+#clockrow{display:flex;align-items:center;flex:none}
 #date{font-size:2.5rem;color:#c9d4e6;white-space:nowrap;padding-left:.4rem}
-#clockwrap{position:relative;display:inline-block;align-self:flex-start;margin:.6rem 0 .8rem .2rem;padding:.7rem 2rem .9rem}
+#clockwrap{position:relative;display:inline-block;flex:none;margin:.5rem 1.3rem .3rem .2rem;padding:.5rem 1.5rem .6rem}
 #frame{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible}
 #frame path{fill:none;stroke-linecap:round}
 #frametrack{stroke:rgba(255,255,255,.14)}
 #frameprog{stroke:#5aa9ff;stroke-dasharray:100;stroke-dashoffset:100}
-#clock{position:relative;font-size:9.4rem;line-height:.9;font-weight:300;letter-spacing:-.02em;white-space:nowrap}
-#sec{font-size:3.6rem;color:#8da2c4;margin-left:.6rem;letter-spacing:0}
-#sun{display:flex;padding-left:.4rem}
-.sunitem{margin-right:2.6rem;color:#8da2c4;font-size:1.5rem}
-.sunitem b{display:block;font-size:2.6rem;font-weight:400;color:#e6edf8;margin-top:.1rem}
+#clock{position:relative;font-size:6.2rem;line-height:.9;font-weight:300;letter-spacing:-.02em;white-space:nowrap}
+#sec{font-size:2.4rem;color:#8da2c4;margin-left:.6rem;letter-spacing:0}
+#sun{display:flex;flex-direction:column;flex:1;min-width:0}
+.sunitem{display:flex;align-items:baseline;justify-content:space-between;color:#8da2c4;font-size:1.3rem;margin:.15rem 0;max-width:11rem}
+.sunitem b{font-size:2.2rem;font-weight:400;color:#e6edf8}
 .card{background:#142038;border-radius:1.2rem;padding:.9rem 1.3rem;min-width:0}
-#wx{flex:0 0 calc(50% - .6rem);width:calc(50% - .6rem);margin-left:1.2rem;display:flex;flex-direction:column;
+#wx{flex:1 1 0;min-height:0;display:flex;flex-direction:column;
   background:linear-gradient(160deg,#4a86d6,#2b4f8c)}
 #wxhead{display:flex;justify-content:space-between;white-space:nowrap;font-size:1.4rem;color:#d7e6ff;text-transform:uppercase;letter-spacing:.06em;min-height:1.6rem}
 #wxwarn{color:#ffd27a;text-transform:none;letter-spacing:0}
@@ -52,38 +54,34 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .daytemp{min-width:7rem;text-align:right}
 .daytemp span{color:#b9cdee}
 #wx.stale #wxmain,#wx.stale #nexthour,#wx.stale #wxdetails,#wx.stale #days{opacity:.55}
-#bottom{display:flex;flex-direction:row;margin-top:1rem;height:7.2rem;flex:none}
-#bottom .card{flex:0 0 calc(50% - .6rem);width:calc(50% - .6rem);margin-right:1.2rem}
-#bottom .card:last-child{margin-right:0}
+#powercard{flex:none;height:7.2rem;margin-top:1rem}
 .soon{border:1px dashed #33476b;background:transparent;opacity:.75}
 .soon h4{margin:0 0 .3rem;font-size:1.3rem;color:#8da2c4;text-transform:uppercase;letter-spacing:.06em;font-weight:400}
 .soon p{margin:0;font-size:1.7rem;color:#c9d4e6}
 #status{position:absolute;right:1.4rem;bottom:.25rem;font-size:1.05rem;color:#8da2c4;opacity:.55}
 /* Блок «Повітряна тривога» */
-#alertcard{display:flex;align-items:center;padding:.7rem 1.2rem;overflow:hidden}
-#atext{flex:1;min-width:0}
-#ahead{font-size:1.25rem;color:#8da2c4;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
-#astat{font-size:2.4rem;font-weight:500;color:#6ee7a0;line-height:1.1;margin-top:.2rem}
-#asub{font-size:1.35rem;color:#9fb2d1;margin-top:.3rem;line-height:1.25;overflow:hidden}
-#alertcard.withmap #astat{font-size:2.1rem}
-#alertcard.tight #ahead{display:none}
-#alertcard.tight #astat{font-size:2.1rem;margin-top:0}
-#alertcard.tight #asub{font-size:1.2rem;margin-top:.2rem;line-height:1.2}
+#alertcard{flex:1 1 0;min-height:0;margin-top:.7rem;padding:.5rem 1.2rem .6rem;overflow:hidden;display:flex;flex-direction:column}
+#amain{flex:1 1 0;min-height:0;display:flex;align-items:center;justify-content:center}
+#amap{flex:none;display:none}
+#amap svg{display:block}
+#alist{flex:1;min-width:0;margin-left:1.2rem;white-space:nowrap;text-overflow:ellipsis;font-size:1.4rem;color:#9fb2d1;line-height:1.35;overflow:hidden}
+#alist b{display:block;font-weight:400;color:#8da2c4;text-transform:uppercase;letter-spacing:.06em;font-size:1.15rem;margin-bottom:.2rem}
+#alist.big{font-size:2rem;margin-left:0;text-align:center}
+#aline{flex:none;font-size:1.9rem;line-height:1.2;color:#6ee7a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:.3rem;text-align:center}
+#aline #asub{color:#9fb2d1;font-size:1.5rem}
 #alertcard.alarm{background:#4a1219}
-#alertcard.alarm #astat{color:#ff7b7b}
+#alertcard.alarm #aline{color:#ff7b7b}
 #alertcard.alarm #asub{color:#f3c0c0}
 #alertcard.dim{background:transparent;border:1px dashed #33476b}
-#alertcard.dim #astat{color:#c9d4e6;font-size:1.7rem;font-weight:400}
-#amap{flex:none;margin-left:1rem;display:none}
-#amap svg{display:block}
+#alertcard.dim #aline{color:#c9d4e6;font-weight:400}
 .anim #alertcard.alarm #astat{-webkit-animation:apulse 1.6s ease-in-out infinite;animation:apulse 1.6s ease-in-out infinite}
 @-webkit-keyframes apulse{0%,100%{opacity:1}50%{opacity:.55}}
 @keyframes apulse{0%,100%{opacity:1}50%{opacity:.55}}
 .night #alertcard.alarm{background:#2a1013}
-.night #alertcard.alarm #astat{color:#b86a6a}
+.night #alertcard.alarm #aline{color:#b86a6a}
 .night #alertcard.alarm #asub{color:#8b6f6f}
-.night #astat{color:#4f8f6f}
-.night #asub,.night #ahead{color:#5d6672}
+.night #aline{color:#4f8f6f}
+.night #asub,.night #alist,.night #alist b{color:#5d6672}
 .night #alertcard.dim{border-color:#1f2733}
 .optrow{display:flex;align-items:center;justify-content:center;margin:.35rem 0}
 .optlbl{width:12rem;text-align:left;font-size:1.5rem;color:#8da2c4;flex:none}
@@ -170,18 +168,15 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .anim .cloudg{animation:drift 8s ease-in-out infinite}
 /* Вертикальна розкладка */
 .port #top{flex-direction:column}
-.port #left{flex:none;width:auto;padding-top:1rem}
-.port #clock{font-size:9.4rem}
-.port #wx{flex:none;width:auto;margin-left:0;margin-top:1.2rem}
-.port #bottom{flex-direction:column;height:auto}
-.port #bottom .card{margin-right:0;margin-bottom:1rem;flex:none;width:auto;height:5.8rem}
-.port #bottom .card:last-child{margin-bottom:0}
-.port #bottom #powercard{height:7.8rem}
-.port #sun{justify-content:flex-start}
+.port #top{flex-direction:column}
+.port #left{flex:1 1 0;min-height:0;width:auto;padding-top:.6rem}
+.port #right{flex:none;width:auto;margin-left:0;margin-top:1rem}
+.port #wx{flex:none}
+.port #powercard{height:7.8rem}
 /* Нічний режим */
 .night,.night body{background:#000;color:#8b949e}
-.night #date,.night #sec,.night .sunitem,.night .soon h4,.night #status{color:#5d6672}
-.night .sunitem b,.night .soon p{color:#8b949e}
+.night #date,.night #sec,.night .sunitem,.night #status{color:#5d6672}
+.night .sunitem b{color:#8b949e}
 .night #frametrack{stroke:rgba(255,255,255,.07)}
 .night #frameprog{stroke:#2f4d78}
 .night .card{background:#0b0f15;border:1px solid #161c25}
@@ -204,13 +199,20 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   <div id="top">
     <div id="left">
       <div id="date">&nbsp;</div>
-      <div id="clockwrap"><svg id="frame" xmlns="http://www.w3.org/2000/svg"><path id="frametrack"/><path id="frameprog" pathLength="100"/></svg><div id="clock"><span id="hm">--:--</span><span id="sec"></span></div></div>
-      <div id="sun">
+      <div id="clockrow">
+        <div id="clockwrap"><svg id="frame" xmlns="http://www.w3.org/2000/svg"><path id="frametrack"/><path id="frameprog" pathLength="100"/></svg><div id="clock"><span id="hm">--:--</span><span id="sec"></span></div></div>
+        <div id="sun">
         <div class="sunitem">схід<b id="sunrise">--:--</b></div>
         <div class="sunitem">захід<b id="sunset">--:--</b></div>
         <div class="sunitem">день<b id="daylen">--:--</b></div>
       </div>
+      </div>
+      <div class="card" id="alertcard">
+        <div id="amain"><div id="amap"></div><div id="alist"></div></div>
+        <div id="aline"><span id="astat"></span><span id="asub"></span></div>
+      </div>
     </div>
+    <div id="right">
     <div id="wx" class="card">
       <div id="wxhead"><span id="city"></span><span id="wxwarn"></span></div>
       <div id="wxmain"><div id="wxicon"></div><div id="temp">--°</div></div>
@@ -222,15 +224,13 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
       </div>
       <div id="days"></div>
     </div>
-  </div>
-  <div id="bottom">
-    <div class="card" id="alertcard"><div id="atext"><div id="ahead">Повітряна тривога</div><div id="astat"></div><div id="asub"></div></div><div id="amap"></div></div>
     <div class="card" id="powercard">
       <div id="phead"><span id="ptitle">Світло</span><span id="pstatus" class="dim">Завантаження…</span></div>
       <div id="pnone">Графік відключень для цього регіону поки не підключено</div>
       <div class="prow"><span class="plbl">сьогодні</span><div class="pwrap"><div class="pbar" id="pbar0"></div><div id="pnow"></div></div></div>
       <div class="prow thin"><span class="plbl">завтра</span><div class="pwrap"><div class="pbar" id="pbar1"></div></div></div>
       <div class="prow"><span class="plbl"></span><div id="pticks"><span style="left:0%">0</span><span style="left:8.3333%">2</span><span style="left:16.6667%">4</span><span style="left:25%">6</span><span style="left:33.3333%">8</span><span style="left:41.6667%">10</span><span style="left:50%">12</span><span style="left:58.3333%">14</span><span style="left:66.6667%">16</span><span style="left:75%">18</span><span style="left:83.3333%">20</span><span style="left:91.6667%">22</span><span style="left:100%">24</span></div></div>
+    </div>
     </div>
   </div>
   <div id="gear"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="5" stroke-width="2.4"/><g stroke-width="3.2"><line x1="12" y1="2" x2="12" y2="5.2"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(45 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(90 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(135 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(180 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(225 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(270 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(315 12 12)"/></g></g></svg></div>
@@ -242,7 +242,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.7.0';
+  var APP_VERSION = '0.8.0';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
@@ -512,20 +512,9 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     var fs = port ? Math.min(w / 33.3, h / 70) : Math.min(w / 70, h / 33.3);
     fs = Math.round(fs * 100) / 100;
     if (fs > 0 && rootEl._fs !== fs) { rootEl._fs = fs; rootEl.style.fontSize = fs + 'px'; }
-    // Зайве місце (планшет, ТВ) віддаємо нижньому ряду, щоб у блоці тривоги влізла мапа
-    var extra = fs > 0 ? (h / fs - (port ? 70 : 33.3)) : 0, bot = 7.2, ah = 5.8, lk;
-    if (extra < 0) extra = 0;
-    if (port) { ah = Math.min(12, 5.8 + extra); } else { bot = Math.min(13, 7.2 + extra); ah = bot; }
-    bot = Math.round(bot * 10) / 10; ah = Math.round(ah * 10) / 10;
-    lk = (port ? 'p' : 'l') + bot + '/' + ah + '/' + (isNight(d) ? 'n' : 'd');
-    if (rootEl._lk !== lk) {
-      rootEl._lk = lk;
-      $('bottom').style.height = port ? '' : bot + 'rem';
-      $('alertcard').style.height = port ? ah + 'rem' : '';
-      layout.alertH = ah;
-      layout.cardW = port ? (w / fs - 2.4) : ((w / fs - 3.6) / 2) - 2.4;
-      renderAlerts();
-    }
+    // Розмір блоку тривоги залежить від екрана: при зміні розміру чи орієнтації перемальовуємо мапу
+    var lk = (port ? 'p' : 'l') + w + 'x' + h + (isNight(d) ? 'n' : 'd');
+    if (rootEl._lk !== lk) { rootEl._lk = lk; renderAlerts(); }
   }
 
   // ---------- Екран не гасне ----------
@@ -602,12 +591,12 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     g.box = [x0, y0, x1, y1];
     return g.box;
   }
-  // Стан тривог: { src: 'off'|'demo', st: {індекс області: 1 (тривога) | 2 (частково)}, own: 0|1|2, since: unix-секунди }
+  // Стан тривог: { src: 'off'|'demo', st: {індекс області: 1 (тривога) | 2 (частково)}, own: 0|1, since: початок тривоги, lastEnd: кінець останньої тривоги (unix-секунди) }
   // Тут же підключатиметься справжнє джерело (ukrainealarm / alerts.in.ua): достатньо повернути такий самий об'єкт.
   function alertState() {
-    var m = String(cfg.alerts), oi = geoIndex(cfg.region), st = {}, i, nb, o = { src: 'off', st: st, own: 0, since: 0, oi: oi }, now = new Date().getTime() / 1000;
+    var m = String(cfg.alerts), oi = geoIndex(cfg.region), st = {}, i, nb, o = { src: 'off', st: st, own: 0, since: 0, lastEnd: 0, oi: oi }, now = new Date().getTime() / 1000;
     if (m === 'off') return o;
-    o.src = 'demo';
+    o.src = 'demo'; o.lastEnd = now - (3 * 3600 + 12 * 60);
     nb = oi >= 0 ? GEO[oi][2] : [];
     if (m === 'own') {
       if (oi >= 0) st[oi] = 1;
@@ -644,7 +633,7 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
       fills = a.st[oi] === 1 ? C1 : (a.st[oi] === 2 ? C2 : C0);
       out += '<path d="' + GEO[oi][1] + '" fill="' + fills + '" stroke="' + OWN + '" stroke-width="' + (strokeW * 2.4) + '" stroke-linejoin="round"/>';
     }
-    if (level === 'region' && w * sc >= 13) {          // підписи лише коли мапа велика
+    if (level === 'region' && w * sc >= 22) {          // підписи лише коли мапа велика
       for (k = 0; k < ids.length; k++) {
         b = geoBox(ids[k]);
         lab += '<text x="' + ((b[0] + b[2]) / 2) + '" y="' + ((b[1] + b[3]) / 2) + '" font-size="' + (0.95 / sc) + '" text-anchor="middle" fill="' + (night ? '#8b949e' : '#e6edf8') + '">' + esc(geoLabel(GEO[ids[k]][0])) + '</text>';
@@ -666,37 +655,35 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     var m = Math.max(0, Math.floor(sec / 60));
     return m < 60 ? m + ' хв' : Math.floor(m / 60) + ' год ' + pad2(m % 60) + ' хв';
   }
-  var layout = { alertH: 5.8, cardW: 33 };      // розміри блоку тривоги в rem (виставляє applyClasses)
   function renderAlerts() {
-    var card = $('alertcard'), a = alertState(), level = String(cfg.map), innerH = layout.alertH - 1.4, now = new Date().getTime() / 1000;
-    var cls = 'card', stat, sub, m = null, other, nm = cfg.name;
-    if (level === 'auto') level = innerH >= 9 ? 'country' : 'strip';
+    var card = $('alertcard'), a = alertState(), level = String(cfg.map), now = new Date().getTime() / 1000, fs = rootEl._fs || 10.8;
+    var cw = card.clientWidth / fs, ch = card.clientHeight / fs;
+    var cls = 'card', stat, sub = '', other, m = null, mapW = 0, mh = '', listW, lh = '', big = false;
+    var availH = Math.max(3, ch - 1.1 - 3.4), availW = Math.max(6, cw - 2.4);
+    if (level === 'auto') level = 'country';
     if (level === 'region' && a.oi < 0) level = 'country';
+    other = namesOf(a, 1);
     if (a.src === 'off') {
-      cls += ' dim'; stat = 'Дані про тривоги не підключено'; sub = 'Тест мапи: шестерня, «Вигляд і тривоги»';
+      cls += ' dim'; stat = 'Дані про тривоги не підключено';
+      lh = '<b>Тест мапи</b>шестерня, «Вигляд і тривоги»';
     } else if (a.own) {
-      cls += ' alarm'; stat = 'ТРИВОГА';
-      sub = esc(nm) + ' · з ' + hhmm(a.since) + ' (' + durText(now - a.since) + ')';
-      other = namesOf(a, 1); if (other.length) sub += '<br>Також: ' + esc(other.slice(0, 3).join(', ')) + (other.length > 3 ? ' +' + (other.length - 3) : '');
+      cls += ' alarm'; stat = 'ТРИВОГА'; sub = ' · ' + durText(now - a.since) + ' (з ' + hhmm(a.since) + ')';
     } else {
-      stat = 'Тривоги немає';
-      other = namesOf(a, 1);
-      sub = esc(nm) + ' · спокійно';
-      if (other.length) sub += '<br>Тривога: ' + esc(other.slice(0, 3).join(', ')) + (other.length > 3 ? ' +' + (other.length - 3) : '');
+      stat = 'Тривоги немає'; sub = ' · вже ' + durText(now - a.lastEnd);
     }
-    var mapW = 0, mh = '';
+    if (a.src !== 'off') {
+      lh = other.length ? '<b>Тривога також</b>' + esc(other.slice(0, 5).join('\n')).replace(/\n/g, '<br>') + (other.length > 5 ? '<br>+' + (other.length - 5) + ' ще' : '') : '<b>В інших областях</b>спокійно';
+    }
     if (level !== 'strip') {
-      m = mapSvg(level, a, Math.max(2, innerH));
-      mapW = m.w;
-      if (mapW > layout.cardW * 0.58) { m = mapSvg(level, a, Math.max(2, innerH) * layout.cardW * 0.58 / mapW); mapW = m.w; }
-      mh = m.svg;
-    }
-    if (innerH <= 6.2) cls += ' tight';
-    if (m) cls += ' withmap';
+      m = mapSvg(level, a, availH);
+      if (m.w > availW * 0.62) m = mapSvg(level, a, availH * availW * 0.62 / m.w);
+      mapW = m.w; mh = m.svg; listW = availW - mapW;
+      if (listW < 9) lh = '';                         // для списку не лишилось місця
+    } else { big = true; }
     if (card.className !== cls) card.className = cls;
-    setText($('astat'), stat); setHtml($('asub'), sub);
-    var am = $('amap'); am.style.display = m ? 'block' : 'none';
-    setHtml(am, mh);
+    setText($('astat'), stat); setText($('asub'), sub);
+    var am = $('amap'); am.style.display = m ? 'block' : 'none'; setHtml(am, mh);
+    var al = $('alist'); al.className = big ? 'big' : ''; setHtml(al, lh);
   }
 
   // ---------- Світло: джерела графіків (провайдери) ----------
