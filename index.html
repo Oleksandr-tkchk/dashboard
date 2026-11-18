@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.8.0">
+<meta name="app-version" content="0.8.1">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -64,9 +64,9 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 #amain{flex:1 1 0;min-height:0;display:flex;align-items:center;justify-content:center}
 #amap{flex:none;display:none}
 #amap svg{display:block}
-#alist{flex:1;min-width:0;margin-left:1.2rem;white-space:nowrap;text-overflow:ellipsis;font-size:1.4rem;color:#9fb2d1;line-height:1.35;overflow:hidden}
-#alist b{display:block;font-weight:400;color:#8da2c4;text-transform:uppercase;letter-spacing:.06em;font-size:1.15rem;margin-bottom:.2rem}
-#alist.big{font-size:2rem;margin-left:0;text-align:center}
+#alist{flex:1;min-width:0;align-self:flex-start;margin:.6rem 0 0 1.2rem;max-height:100%;font-size:1.25rem;color:#9fb2d1;line-height:1.3;overflow:hidden;word-wrap:break-word}
+#alist b{display:block;font-weight:400;color:#8da2c4;text-transform:uppercase;letter-spacing:.04em;font-size:1.05rem;margin-bottom:.25rem;line-height:1.2}
+#alist.big{font-size:2rem;margin:0;align-self:center;text-align:center}
 #aline{flex:none;font-size:1.9rem;line-height:1.2;color:#6ee7a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-top:.3rem;text-align:center}
 #aline #asub{color:#9fb2d1;font-size:1.5rem}
 #alertcard.alarm{background:#4a1219}
@@ -242,7 +242,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.8.0';
+  var APP_VERSION = '0.8.1';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
@@ -655,6 +655,20 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     var m = Math.max(0, Math.floor(sec / 60));
     return m < 60 ? m + ' хв' : Math.floor(m / 60) + ' год ' + pad2(m % 60) + ' хв';
   }
+  // Список областей: чим їх більше, тим дрібніший шрифт і коротші назви; що не влізло - «+N ще»
+  function shortName(n) { return n.length > 10 ? n.substr(0, 9) + '.' : n; }
+  function listHtml(names, own, wRem, hRem) {
+    var f = names.length <= 4 ? 1.25 : (names.length <= 8 ? 1.1 : 1.0), cpl, lines, budget, used = 0, out = [], i, nm, head;
+    cpl = Math.floor(wRem / (f * 0.5)); lines = Math.floor((hRem - 2.2) / (f * 1.3));
+    budget = Math.max(10, cpl * lines) - 8;
+    for (i = 0; i < names.length; i++) {
+      nm = names.length > 4 ? shortName(names[i]) : names[i];
+      if (used + nm.length + 2 > budget && i > 0) break;
+      out.push(nm); used += nm.length + 2;
+    }
+    head = (own ? 'Тривога також' : 'Тривога в областях') + ' (' + names.length + ')';
+    return '<span style="font-size:' + f + 'rem"><b>' + head + '</b>' + esc(out.join(', ')) + (out.length < names.length ? ' +' + (names.length - out.length) + ' ще' : '') + '</span>';
+  }
   function renderAlerts() {
     var card = $('alertcard'), a = alertState(), level = String(cfg.map), now = new Date().getTime() / 1000, fs = rootEl._fs || 10.8;
     var cw = card.clientWidth / fs, ch = card.clientHeight / fs;
@@ -672,13 +686,14 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
       stat = 'Тривоги немає'; sub = ' · вже ' + durText(now - a.lastEnd);
     }
     if (a.src !== 'off') {
-      lh = other.length ? '<b>Тривога також</b>' + esc(other.slice(0, 5).join('\n')).replace(/\n/g, '<br>') + (other.length > 5 ? '<br>+' + (other.length - 5) + ' ще' : '') : '<b>В інших областях</b>спокійно';
+      lh = other.length ? '<b>' + (a.own ? 'Тривога також' : 'Тривога в областях') + ' (' + other.length + ')</b>' + esc(other.slice(0, 14).join(', ')) + (other.length > 14 ? ' +' + (other.length - 14) + ' ще' : '') : '<b>Інші області</b>спокійно';
     }
     if (level !== 'strip') {
       m = mapSvg(level, a, availH);
       if (m.w > availW * 0.62) m = mapSvg(level, a, availH * availW * 0.62 / m.w);
       mapW = m.w; mh = m.svg; listW = availW - mapW;
       if (listW < 9) lh = '';                         // для списку не лишилось місця
+      else if (other.length) lh = listHtml(other, a.own, listW - 1.2, availH - 0.6);
     } else { big = true; }
     if (card.className !== cls) card.className = cls;
     setText($('astat'), stat); setText($('asub'), sub);
