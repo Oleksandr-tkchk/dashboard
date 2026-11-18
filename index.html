@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.3.0">
+<meta name="app-version" content="0.3.1">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -76,7 +76,8 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .pbar i.r{background:#e5484d}
 .pbar i.y{background:#f5b83d}
 .pbar i.p{opacity:.45}
-.pbar i:nth-child(12n+1){border-left:1px solid rgba(10,17,29,.9)}
+.pbar i:nth-child(2n+1){border-left:1px solid rgba(10,17,29,.45)}
+.pbar i:nth-child(12n+1){border-left-color:rgba(10,17,29,.95)}
 #pnow{position:absolute;top:-.25rem;bottom:-.25rem;width:2px;margin-left:-1px;background:#fff;border-radius:1px;left:0}
 #pticks{position:relative;flex:1;height:1.1rem;font-size:.95rem;color:#8da2c4}
 #pticks span{position:absolute;top:0;transform:translateX(-50%);-webkit-transform:translateX(-50%)}
@@ -170,7 +171,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
       <div id="phead"><span id="ptitle">Світло</span><span id="pstatus" class="dim">Завантаження…</span></div>
       <div class="prow"><span class="plbl">сьогодні</span><div class="pwrap"><div class="pbar" id="pbar0"></div><div id="pnow"></div></div></div>
       <div class="prow thin"><span class="plbl">завтра</span><div class="pwrap"><div class="pbar" id="pbar1"></div></div></div>
-      <div class="prow"><span class="plbl"></span><div id="pticks"><span style="left:0">0</span><span style="left:25%">6</span><span style="left:50%">12</span><span style="left:75%">18</span><span style="left:100%">24</span></div></div>
+      <div class="prow"><span class="plbl"></span><div id="pticks"><span style="left:0%">0</span><span style="left:8.3333%">2</span><span style="left:16.6667%">4</span><span style="left:25%">6</span><span style="left:33.3333%">8</span><span style="left:41.6667%">10</span><span style="left:50%">12</span><span style="left:58.3333%">14</span><span style="left:66.6667%">16</span><span style="left:75%">18</span><span style="left:83.3333%">20</span><span style="left:91.6667%">22</span><span style="left:100%">24</span></div></div>
     </div>
   </div>
   <div id="gear"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="5" stroke-width="2.4"/><g stroke-width="3.2"><line x1="12" y1="2" x2="12" y2="5.2"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(45 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(90 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(135 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(180 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(225 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(270 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(315 12 12)"/></g></g></svg></div>
@@ -182,7 +183,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.3.0';
+  var APP_VERSION = '0.3.1';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
