@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.2.0">
+<meta name="app-version" content="0.3.0">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -31,34 +31,79 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 #sun{display:flex;padding-left:.4rem}
 .sunitem{margin-right:2.6rem;color:#8da2c4;font-size:1.5rem}
 .sunitem b{display:block;font-size:2.6rem;font-weight:400;color:#e6edf8;margin-top:.1rem}
-.card{background:#142038;border-radius:1.2rem;padding:1rem 1.3rem;min-width:0}
+.card{background:#142038;border-radius:1.2rem;padding:.9rem 1.3rem;min-width:0}
 #wx{flex:1 1 0;margin-left:1.2rem;display:flex;flex-direction:column;
   background:linear-gradient(160deg,#4a86d6,#2b4f8c)}
 #wxhead{display:flex;justify-content:space-between;white-space:nowrap;font-size:1.4rem;color:#d7e6ff;text-transform:uppercase;letter-spacing:.06em;min-height:1.6rem}
 #wxwarn{color:#ffd27a;text-transform:none;letter-spacing:0}
 #wxmain{display:flex;align-items:center;margin-top:.2rem}
-#wxicon{width:6rem;height:6rem;flex:none}
+#wxicon{width:5.2rem;height:5.2rem;flex:none}
 #wxicon svg,.dayicon svg{width:100%;height:100%;display:block}
-#temp{font-size:6.2rem;font-weight:300;line-height:1;margin-left:1rem;white-space:nowrap}
-#nexthour{font-size:1.6rem;color:#d7e6ff;margin-top:.2rem;min-height:2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#wxdetails{display:flex;margin-top:.6rem;padding-top:.6rem;border-top:1px solid rgba(255,255,255,.25)}
+#temp{font-size:5.4rem;font-weight:300;line-height:1;margin-left:1rem;white-space:nowrap}
+#nexthour{font-size:1.6rem;color:#d7e6ff;margin-top:.1rem;min-height:1.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#wxdetails{display:flex;margin-top:.4rem;padding-top:.4rem;border-top:1px solid rgba(255,255,255,.25)}
 .stat{flex:1;font-size:1.3rem;color:#d7e6ff;white-space:nowrap}
 .stat:first-child{flex:1.35}
-.stat b{display:block;font-size:2.2rem;font-weight:400;color:#fff}
+.stat b{display:block;font-size:2rem;font-weight:400;color:#fff}
 #days{margin-top:.5rem;padding-top:.3rem;border-top:1px solid rgba(255,255,255,.25)}
-.day{display:flex;align-items:center;height:2.8rem;font-size:2.1rem}
+.day{display:flex;align-items:center;height:2.5rem;font-size:2rem}
 .dayname{flex:1}
-.dayicon{width:2.6rem;height:2.6rem;margin:0 1rem}
+.dayicon{width:2.3rem;height:2.3rem;margin:0 1rem}
 .daytemp{min-width:7rem;text-align:right}
 .daytemp span{color:#b9cdee}
 #wx.stale #wxmain,#wx.stale #nexthour,#wx.stale #wxdetails,#wx.stale #days{opacity:.55}
-#bottom{display:flex;flex-direction:row;margin-top:1rem;height:5.8rem;flex:none}
+#bottom{display:flex;flex-direction:row;margin-top:1rem;height:7.2rem;flex:none}
 #bottom .card{flex:1 1 0;margin-right:1.2rem}
 #bottom .card:last-child{margin-right:0}
 .soon{border:1px dashed #33476b;background:transparent;opacity:.75}
 .soon h4{margin:0 0 .3rem;font-size:1.3rem;color:#8da2c4;text-transform:uppercase;letter-spacing:.06em;font-weight:400}
 .soon p{margin:0;font-size:1.7rem;color:#c9d4e6}
 #status{position:absolute;right:1.4rem;bottom:.25rem;font-size:1.05rem;color:#8da2c4;opacity:.55}
+/* Блок «Світло» */
+#powercard{display:block;padding:.7rem 1.2rem;overflow:hidden}
+#phead{display:flex;justify-content:space-between;align-items:baseline;white-space:nowrap;font-size:1.25rem;color:#8da2c4;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem}
+#pstatus{font-size:1.7rem;text-transform:none;letter-spacing:0;font-weight:500;color:#6ee7a0;overflow:hidden;text-overflow:ellipsis}
+#pstatus.off{color:#ff8a8a}
+#pstatus.maybe{color:#f5b83d}
+#pstatus.dim{color:#8da2c4;font-weight:400}
+.prow{display:flex;align-items:center;margin-top:.25rem}
+.plbl{width:4.8rem;flex:none;font-size:1.05rem;color:#8da2c4}
+.pwrap{position:relative;flex:1;min-width:0}
+.pbar{display:flex;height:1rem;border-radius:.3rem;overflow:hidden;background:#1d2b46}
+.thin .pbar{height:.55rem}
+.pbar i{flex:1;display:block;background:#33476b}
+.pbar i.g{background:#2fbf71}
+.pbar i.r{background:#e5484d}
+.pbar i.y{background:#f5b83d}
+.pbar i.p{opacity:.45}
+.pbar i:nth-child(12n+1){border-left:1px solid rgba(10,17,29,.9)}
+#pnow{position:absolute;top:-.25rem;bottom:-.25rem;width:2px;margin-left:-1px;background:#fff;border-radius:1px;left:0}
+#pticks{position:relative;flex:1;height:1.1rem;font-size:.95rem;color:#8da2c4}
+#pticks span{position:absolute;top:0;transform:translateX(-50%);-webkit-transform:translateX(-50%)}
+#pticks span:first-child{transform:none;-webkit-transform:none}
+#pticks span:last-child{transform:translateX(-100%);-webkit-transform:translateX(-100%)}
+#powercard.stale .prow,#powercard.stale #pstatus{opacity:.55}
+/* Шестерня та панель налаштувань */
+#gear{position:absolute;left:.3rem;bottom:0;width:3.8rem;height:2.8rem;display:flex;align-items:center;justify-content:center;opacity:.3;color:#8da2c4;z-index:5;cursor:pointer}
+#gear svg{width:1.5rem;height:1.5rem;display:block}
+#ovl{display:none;position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(5,9,15,.94);z-index:10;align-items:center;justify-content:center}
+#ovl.open{display:flex}
+#panel{background:#142038;border-radius:1.2rem;padding:1rem 1.4rem;text-align:center;max-width:96%;max-height:98%;overflow:hidden}
+.ptitle2{font-size:2rem;color:#e6edf8;margin-bottom:.3rem}
+.psub{font-size:1.4rem;color:#8da2c4;margin-bottom:.5rem}
+.pdots{height:1.8rem;margin-bottom:.2rem}
+.pdots i{display:inline-block;width:1.1rem;height:1.1rem;border-radius:50%;border:2px solid #5aa9ff;margin:0 .5rem;vertical-align:middle}
+.pdots i.f{background:#5aa9ff}
+.pmsg{min-height:1.7rem;font-size:1.4rem;color:#ffb4b4;margin-bottom:.2rem}
+.pad{width:21rem;margin:0 auto}
+.k{display:inline-block;width:6.4rem;height:4.2rem;margin:.3rem;border-radius:.8rem;background:#1e3050;color:#fff;font-size:2.4rem;line-height:4.2rem;text-align:center;cursor:pointer}
+.k.sm{font-size:1.8rem;color:#c9d4e6}
+.qg{margin:0 auto}
+.land .qg{width:52rem}
+.port .qg{width:26rem}
+.q{display:inline-block;width:8rem;height:4.2rem;margin:.3rem;border-radius:.8rem;background:#1e3050;color:#e6edf8;font-size:2rem;line-height:4.2rem;text-align:center;cursor:pointer}
+.q.on{background:#2b6fd1;color:#fff}
+.act{display:inline-block;padding:0 1.6rem;height:4rem;line-height:4rem;margin:.6rem .4rem 0;border-radius:.8rem;background:#1e3050;font-size:1.7rem;color:#c9d4e6;cursor:pointer}
 /* Анімація значків (вимикається параметром anim=0) */
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 @keyframes drift{0%{transform:translateX(-1.5px)}50%{transform:translateX(1.5px)}100%{transform:translateX(-1.5px)}}
@@ -72,6 +117,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .port #bottom{flex-direction:column;height:auto}
 .port #bottom .card{margin-right:0;margin-bottom:1rem;flex:none;height:5.8rem}
 .port #bottom .card:last-child{margin-bottom:0}
+.port #bottom #powercard{height:7.8rem}
 .port #sun{justify-content:flex-start}
 /* Нічний режим */
 .night,.night body{background:#000;color:#8b949e}
@@ -86,6 +132,11 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .night .daytemp span{color:#5d6672}
 .night #wxdetails,.night #days{border-top-color:#1b222c}
 .night .soon{background:transparent;border:1px dashed #1f2733}
+.night .pbar{filter:brightness(.6);-webkit-filter:brightness(.6)}
+.night #pstatus{filter:brightness(.65);-webkit-filter:brightness(.65)}
+.night #pnow{background:#9aa3ad}
+.night #phead,.night .plbl,.night #pticks{color:#5d6672}
+.night #gear{opacity:.18}
 .night #wxicon svg,.night .dayicon svg{-webkit-filter:brightness(.55) saturate(.6);filter:brightness(.55) saturate(.6)}
 </style>
 </head>
@@ -115,8 +166,15 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   </div>
   <div id="bottom">
     <div class="card soon" id="alertcard"><h4>Повітряна тривога</h4><p>Буде на наступному кроці</p></div>
-    <div class="card soon" id="powercard"><h4>Світло</h4><p>Буде на наступному кроці</p></div>
+    <div class="card" id="powercard">
+      <div id="phead"><span id="ptitle">Світло</span><span id="pstatus" class="dim">Завантаження…</span></div>
+      <div class="prow"><span class="plbl">сьогодні</span><div class="pwrap"><div class="pbar" id="pbar0"></div><div id="pnow"></div></div></div>
+      <div class="prow thin"><span class="plbl">завтра</span><div class="pwrap"><div class="pbar" id="pbar1"></div></div></div>
+      <div class="prow"><span class="plbl"></span><div id="pticks"><span style="left:0">0</span><span style="left:25%">6</span><span style="left:50%">12</span><span style="left:75%">18</span><span style="left:100%">24</span></div></div>
+    </div>
   </div>
+  <div id="gear"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="12" cy="12" r="5" stroke-width="2.4"/><g stroke-width="3.2"><line x1="12" y1="2" x2="12" y2="5.2"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(45 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(90 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(135 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(180 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(225 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(270 12 12)"/><line x1="12" y1="2" x2="12" y2="5.2" transform="rotate(315 12 12)"/></g></g></svg></div>
+  <div id="ovl"><div id="panel"></div></div>
   <div id="status"></div>
 </div>
 
@@ -124,14 +182,14 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.2.0';
+  var APP_VERSION = '0.3.0';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
   // Після цього вони запам'ятовуються на пристрої. Скинути: ?reset=1
   // view: auto | land | port    night: auto | on | off | 22:00-07:00    secs: 0|1    anim: 0|1
-  var DEFAULTS = { name: 'Вінниця', lat: 49.2331, lon: 28.4682, view: 'auto', night: 'auto', secs: 0, anim: 1 };
-  var STORE_CFG = 'wd_cfg', STORE_WX = 'wd_weather', STORE_RELOAD = 'wd_reload_day';
+  var DEFAULTS = { name: 'Вінниця', lat: 49.2331, lon: 28.4682, view: 'auto', night: 'auto', secs: 0, anim: 1, queue: '' };
+  var STORE_CFG = 'wd_cfg', STORE_WX = 'wd_weather', STORE_RELOAD = 'wd_reload_day', STORE_PIN = 'wd_pin', STORE_PW = 'wd_power';
 
   var WEATHER_EVERY = 10 * 60 * 1000;   // оновлення погоди раз на 10 хв
   var WEATHER_RETRY = 60 * 1000;        // повтор після помилки
@@ -164,6 +222,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   function coerce(k, v) {
     if (k === 'lat' || k === 'lon') { var f = parseFloat(v); return isNaN(f) ? DEFAULTS[k] : f; }
     if (k === 'secs' || k === 'anim') { return parseInt(v, 10) ? 1 : 0; }
+    if (k === 'queue') { return /^[1-6]\.[12]$/.test(v) ? v : ''; }
     return v;
   }
   function loadCfg() {
@@ -182,6 +241,10 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     return cfg;
   }
   var cfg = loadCfg();
+  function saveCfg() { lsSet(STORE_CFG, JSON.stringify(cfg)); }
+  var ovlOpen = false;
+  // Якщо забули PIN: відкрити сторінку з ?resetpin=1 (потім відкрити звичайне посилання)
+  if (parseQuery().resetpin === '1') lsDel(STORE_PIN);
 
   // ---------- Значки погоди (вбудовані SVG, без зовнішніх файлів) ----------
   var CLOUD = '<path d="M20 48h27a11 11 0 0 0 1.6-21.9A15 15 0 0 0 19.6 29 10 10 0 0 0 20 48z" fill="#e3e9f2"/>';
@@ -398,6 +461,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   }
   var lastTap = 0;
   document.addEventListener('click', function () {
+    if (ovlOpen) return;
     var n = new Date().getTime();
     if (n - lastTap < 400) toggleFs();
     lastTap = n;
@@ -418,6 +482,190 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     x.send();
   }
   setInterval(checkUpdate, UPDATE_CHECK_EVERY);
+
+  // ---------- Світло: графік Вінницяобленерго (відкрите дзеркало на GitHub) ----------
+  var POWER_URL = 'https://raw.githubusercontent.com/vn-progr/gpv-voe-vinnytsia/main/data/Vinnytsiaoblenerho.json';
+  var POWER_EVERY = 5 * 60 * 1000, POWER_RETRY = 60 * 1000;
+  var POWER_STALE_FETCH = 30 * 60 * 1000;   // давно не вдавалось завантажити
+  var POWER_STALE_SRC = 90 * 60;            // джерело саме давно не оновлювалось (секунди)
+  var QUEUES = ['1.1', '1.2', '2.1', '2.2', '3.1', '3.2', '4.1', '4.2', '5.1', '5.2', '6.1', '6.2'];
+  // Слот = 1 година, ділимо навпіл: g світло є, r немає, y можливе відключення
+  // first = відключено першу половину години, second = другу
+  var CODE = { yes: 'gg', no: 'rr', first: 'rg', second: 'gr', maybe: 'yy', mfirst: 'yg', msecond: 'gy' };
+  var pw = null;
+  try { pw = JSON.parse(lsGet(STORE_PW) || 'null'); } catch (e) { pw = null; }
+
+  function loadPower() {
+    getJSON(POWER_URL + '?_=' + Math.floor(new Date().getTime() / 300000), function (d) {
+      pw = {
+        fetchedAt: new Date().getTime(),
+        data: {
+          lastUpdated: d.lastUpdated || 0,
+          days: (d.fact && d.fact.data) ? d.fact.data : {},
+          ok: !(d.lastUpdateStatus && d.lastUpdateStatus.ok === false)
+        }
+      };
+      lsSet(STORE_PW, JSON.stringify(pw));
+      renderPower();
+      setTimeout(loadPower, POWER_EVERY);
+    }, function () {
+      renderPower();
+      setTimeout(loadPower, POWER_RETRY);
+    });
+  }
+  function cellsOf(slots) {
+    var out = [], h, c;
+    for (h = 1; h <= 24; h++) { c = CODE[slots[String(h)]] || 'gg'; out.push(c.charAt(0), c.charAt(1)); }
+    return out;
+  }
+  function barHtml(cells, cur) {
+    var h = '', i, c;
+    for (i = 0; i < 48; i++) {
+      c = cells ? cells[i] : '';
+      if (cells && i < cur) c += ' p';
+      h += '<i' + (c ? ' class="' + c + '"' : '') + '></i>';
+    }
+    return h;
+  }
+  function cellTime(idx) {
+    var m = idx * 30, day = Math.floor(m / 1440);
+    m = m % 1440;
+    return pad2(Math.floor(m / 60)) + ':' + pad2(m % 60) + (day ? ' (завтра)' : '');
+  }
+  function showStatus(text, cls) { var el = $('pstatus'); setText(el, text); if (el.className !== cls) el.className = cls; }
+
+  function renderPower() {
+    var box = $('powercard'), q = cfg.queue, nowSec = new Date().getTime() / 1000;
+    var now = $('pnow');
+    if (!q) {
+      setText($('ptitle'), 'Світло');
+      showStatus('Оберіть чергу: шестерня внизу ліворуч', 'dim');
+      setHtml($('pbar0'), barHtml(null, -1)); setHtml($('pbar1'), barHtml(null, -1));
+      now.style.display = 'none';
+      return;
+    }
+    setText($('ptitle'), 'Світло · черга ' + q);
+    if (!pw || !pw.data) { showStatus('Завантаження…', 'dim'); now.style.display = 'none'; return; }
+
+    var days = pw.data.days, k, todayKey = null, n;
+    for (k in days) {
+      if (days.hasOwnProperty(k)) { n = parseInt(k, 10); if (n <= nowSec && nowSec < n + 86400) todayKey = n; }
+    }
+    var stale = (new Date().getTime() - pw.fetchedAt > POWER_STALE_FETCH) || (nowSec - pw.data.lastUpdated > POWER_STALE_SRC) || pw.data.ok === false;
+    var cls = box.className.replace(/\s*stale/g, '');
+    box.className = stale ? cls + ' stale' : cls;
+
+    if (todayKey === null || !days[String(todayKey)]['GPV' + q]) {
+      showStatus('Немає графіка на сьогодні', 'dim');
+      setHtml($('pbar0'), barHtml(null, -1)); setHtml($('pbar1'), barHtml(null, -1));
+      now.style.display = 'none';
+      return;
+    }
+    var today = cellsOf(days[String(todayKey)]['GPV' + q]);
+    var tmrDay = days[String(todayKey + 86400)];
+    var tmr = (tmrDay && tmrDay['GPV' + q]) ? cellsOf(tmrDay['GPV' + q]) : null;
+    var nowMin = (nowSec - todayKey) / 60, cur = Math.floor(nowMin / 30);
+
+    setHtml($('pbar0'), barHtml(today, cur));
+    setHtml($('pbar1'), barHtml(tmr, -1));
+    now.style.display = 'block';
+    now.style.left = (nowMin / 1440 * 100) + '%';
+
+    // Поточний стан і найближча зміна
+    var all = tmr ? today.concat(tmr) : today, i;
+    if (all[cur] === 'r') {
+      for (i = cur + 1; i < all.length; i++) {
+        if (all[i] !== 'r') { showStatus('Світла немає до ' + cellTime(i), 'off'); return; }
+      }
+      showStatus('Світла немає до кінця графіка', 'off');
+      return;
+    }
+    for (i = cur + 1; i < all.length; i++) {
+      if (all[i] === 'r') { showStatus((all[cur] === 'y' ? 'Можливе відключення, точно з ' : 'Світло є до ') + cellTime(i), all[cur] === 'y' ? 'maybe' : ''); return; }
+    }
+    showStatus(all[cur] === 'y' ? 'Можливе відключення' : (tmr ? 'Відключень не заплановано' : 'Сьогодні відключень немає'), all[cur] === 'y' ? 'maybe' : '');
+  }
+
+  // ---------- Шестерня + PIN + вибір черги ----------
+  // PIN лише захищає від випадкових дотиків (діти, гості); це не справжній захист
+  var mode = '', pinBuf = '', pinTmp = '', msg = '', fails = 0, lockUntil = 0, idleTimer = null;
+  function hashPin(pin) {
+    var h = 5381, str = 'wd|' + pin, i;
+    for (i = 0; i < str.length; i++) { h = ((h << 5) + h + str.charCodeAt(i)) | 0; }
+    return String(h);
+  }
+  function panelHtml() {
+    var h = '', i;
+    if (mode === 'settings') {
+      h += '<div class="ptitle2">Налаштування</div><div class="psub">Черга відключень</div><div class="qg">';
+      for (i = 0; i < QUEUES.length; i++) {
+        h += '<div class="q' + (QUEUES[i] === cfg.queue ? ' on' : '') + '" data-k="q:' + QUEUES[i] + '">' + QUEUES[i] + '</div>';
+      }
+      return h + '</div><div><span class="act" data-k="chpin">Змінити PIN</span><span class="act" data-k="close">Закрити</span></div>';
+    }
+    var titles = { enter: 'Введіть PIN', create1: 'Придумайте PIN з 4 цифр', create2: 'Повторіть PIN', newpin1: 'Новий PIN з 4 цифр', newpin2: 'Повторіть новий PIN' };
+    h += '<div class="ptitle2">' + titles[mode] + '</div><div class="pdots">';
+    for (i = 0; i < 4; i++) h += '<i' + (i < pinBuf.length ? ' class="f"' : '') + '></i>';
+    h += '</div><div class="pmsg">' + msg + '</div><div class="pad">';
+    var keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'close', '0', 'del'];
+    for (i = 0; i < keys.length; i++) {
+      h += '<div class="k' + (keys[i].length > 1 ? ' sm' : '') + '" data-k="' + keys[i] + '">' +
+        (keys[i] === 'close' ? 'Закрити' : (keys[i] === 'del' ? '←' : keys[i])) + '</div>';
+    }
+    return h + '</div>';
+  }
+  function drawPanel() { setHtml($('panel'), panelHtml()); }
+  function armIdle() { if (idleTimer) clearTimeout(idleTimer); idleTimer = setTimeout(closePanel, 60000); }
+  function openPanel() {
+    ovlOpen = true; pinBuf = ''; pinTmp = ''; msg = '';
+    mode = lsGet(STORE_PIN) ? 'enter' : 'create1';
+    $('ovl').className = 'open';
+    drawPanel(); armIdle();
+  }
+  function closePanel() {
+    ovlOpen = false; mode = ''; pinBuf = ''; msg = '';
+    if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+    $('ovl').className = '';
+    $('panel')._h = null;
+  }
+  function submitPin() {
+    var now = new Date().getTime();
+    if (mode === 'enter') {
+      if (hashPin(pinBuf) === lsGet(STORE_PIN)) { mode = 'settings'; fails = 0; msg = ''; }
+      else {
+        fails++; msg = 'Невірний PIN';
+        if (fails >= 3) { lockUntil = now + 30000; fails = 0; msg = 'Забагато спроб, зачекайте 30 с'; }
+      }
+    } else if (mode === 'create1' || mode === 'newpin1') {
+      pinTmp = pinBuf; mode = (mode === 'create1') ? 'create2' : 'newpin2'; msg = '';
+    } else if (mode === 'create2' || mode === 'newpin2') {
+      if (pinBuf === pinTmp) { lsSet(STORE_PIN, hashPin(pinBuf)); mode = 'settings'; msg = ''; }
+      else { mode = (mode === 'create2') ? 'create1' : 'newpin1'; msg = 'PIN не збігся, спробуйте ще раз'; }
+    }
+    pinBuf = '';
+  }
+  function onKey(k) {
+    armIdle();
+    if (k === 'close') { closePanel(); return; }
+    if (k === 'chpin') { mode = 'newpin1'; pinBuf = ''; msg = ''; drawPanel(); return; }
+    if (k.indexOf('q:') === 0) { cfg.queue = k.substr(2); saveCfg(); renderPower(); drawPanel(); return; }
+    if (mode === 'enter' && new Date().getTime() < lockUntil) {
+      msg = 'Зачекайте ' + Math.ceil((lockUntil - new Date().getTime()) / 1000) + ' с'; drawPanel(); return;
+    }
+    msg = '';
+    if (k === 'del') { pinBuf = pinBuf.slice(0, -1); }
+    else if (pinBuf.length < 4) { pinBuf += k; }
+    if (pinBuf.length === 4) submitPin();
+    drawPanel();
+  }
+  $('gear').addEventListener('click', function (e) { e.stopPropagation(); openPanel(); });
+  $('ovl').addEventListener('click', function (e) {
+    e.stopPropagation();
+    var t = e.target;
+    while (t && t !== this && !t.getAttribute('data-k')) t = t.parentNode;
+    if (!t || t === this) { if (e.target === this) closePanel(); return; }
+    onKey(t.getAttribute('data-k'));
+  });
 
   // ---------- Рамка навколо годин: заповнюється по колу за 60 секунд ----------
   var frameBox = $('clockwrap'), frameSvg = $('frame'), frameTrack = $('frametrack'), frameProg = $('frameprog');
@@ -466,6 +714,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     if (mi !== lastMinute) {            // раз на хвилину
       lastMinute = mi;
       renderWeather();
+      renderPower();
       if (!wlOk) lockScreen();
       // Нічне перезавантаження о 04:00 проти витоків пам'яті (раз на добу)
       if (d.getHours() === 4 && mi === 0 && lsGet(STORE_RELOAD) !== dayStr(d)) {
@@ -481,8 +730,10 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   if (!cfg.secs) $('sec').style.display = 'none';
   updateStatus();
   renderWeather();   // одразу малюємо кеш, якщо він є
+  renderPower();
   tick();
   loadWeather();
+  loadPower();
   lockScreen();
 })();
 </script>
