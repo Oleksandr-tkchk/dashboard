@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.3.2">
+<meta name="app-version" content="0.4.0">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -84,6 +84,9 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 #pticks span:first-child{transform:none;-webkit-transform:none}
 #pticks span:last-child{transform:translateX(-100%);-webkit-transform:translateX(-100%)}
 #powercard.stale .prow,#powercard.stale #pstatus{opacity:.55}
+#pnone{display:none;font-size:1.6rem;color:#c9d4e6;margin-top:.5rem;line-height:1.25}
+#powercard.noprov #pnone{display:block}
+#powercard.noprov .prow{display:none}
 /* Шестерня та панель налаштувань */
 #gear{position:absolute;left:.3rem;bottom:0;width:3.8rem;height:2.8rem;display:flex;align-items:center;justify-content:center;opacity:.3;color:#8da2c4;z-index:5;cursor:pointer}
 #gear svg{width:1.5rem;height:1.5rem;display:block}
@@ -104,6 +107,29 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 .port .qg{width:26rem}
 .q{display:inline-block;width:8rem;height:4.2rem;margin:.3rem;border-radius:.8rem;background:#1e3050;color:#e6edf8;font-size:2rem;line-height:4.2rem;text-align:center;cursor:pointer}
 .q.on{background:#2b6fd1;color:#fff}
+.crow{font-size:1.8rem;color:#e6edf8;margin:.2rem 0 .5rem;line-height:4rem}
+.crow .creg{color:#8da2c4;font-size:1.5rem}
+.crow .act{margin:0 0 0 1rem;height:3.4rem;line-height:3.4rem;font-size:1.5rem}
+.cin{width:96%;margin:0 auto .4rem;min-height:3.6rem;line-height:3.6rem;font-size:2.4rem;color:#fff;background:#0e182b;border-bottom:2px solid #5aa9ff;border-radius:.6rem .6rem 0 0;text-align:left;padding:0 1rem;white-space:nowrap;overflow:hidden}
+.cin .ph{color:#5d6f90;font-size:1.8rem}
+.cin .cur{color:#5aa9ff}
+.cres{margin:0 auto .3rem;overflow:hidden;text-align:left}
+.land .cres{height:8.6rem}
+.port .cres{height:21rem}
+.cr{display:inline-block;vertical-align:top;box-sizing:border-box;margin:.2rem;padding:.35rem 1rem;border-radius:.8rem;background:#1e3050;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;height:4rem}
+.land .cr{width:calc(33.33% - .4rem)}
+.port .cr{width:calc(100% - .4rem);height:3.4rem;padding:.2rem 1rem}
+.cr b{display:block;font-size:1.8rem;font-weight:500;color:#fff;line-height:1.7rem;overflow:hidden;text-overflow:ellipsis}
+.cr span{display:block;font-size:1.2rem;color:#8da2c4;overflow:hidden;text-overflow:ellipsis;line-height:1.7rem}
+.cmsg{font-size:1.5rem;color:#8da2c4;padding:.5rem 1rem}
+.kb{text-align:center}
+.kk{display:inline-block;vertical-align:top;margin:.25rem;border-radius:.7rem;background:#1e3050;color:#fff;text-align:center;cursor:pointer;width:4.7rem;height:3.2rem;line-height:3.2rem;font-size:2rem}
+.kk.sm{font-size:1.5rem;color:#c9d4e6}
+.land .kk.wide{width:24rem}
+.land .kk.mid{width:8rem}
+.port .kk{width:2.9rem;height:3.8rem;line-height:3.8rem;margin:.15rem}
+.port .kk.wide{width:10rem}
+.port .kk.mid{width:7rem}
 .act{display:inline-block;padding:0 1.6rem;height:4rem;line-height:4rem;margin:.6rem .4rem 0;border-radius:.8rem;background:#1e3050;font-size:1.7rem;color:#c9d4e6;cursor:pointer}
 /* Анімація значків (вимикається параметром anim=0) */
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
@@ -169,6 +195,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     <div class="card soon" id="alertcard"><h4>Повітряна тривога</h4><p>Буде на наступному кроці</p></div>
     <div class="card" id="powercard">
       <div id="phead"><span id="ptitle">Світло</span><span id="pstatus" class="dim">Завантаження…</span></div>
+      <div id="pnone">Графік відключень для цього регіону поки не підключено</div>
       <div class="prow"><span class="plbl">сьогодні</span><div class="pwrap"><div class="pbar" id="pbar0"></div><div id="pnow"></div></div></div>
       <div class="prow thin"><span class="plbl">завтра</span><div class="pwrap"><div class="pbar" id="pbar1"></div></div></div>
       <div class="prow"><span class="plbl"></span><div id="pticks"><span style="left:0%">0</span><span style="left:8.3333%">2</span><span style="left:16.6667%">4</span><span style="left:25%">6</span><span style="left:33.3333%">8</span><span style="left:41.6667%">10</span><span style="left:50%">12</span><span style="left:58.3333%">14</span><span style="left:66.6667%">16</span><span style="left:75%">18</span><span style="left:83.3333%">20</span><span style="left:91.6667%">22</span><span style="left:100%">24</span></div></div>
@@ -183,14 +210,14 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.3.2';
+  var APP_VERSION = '0.4.0';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
   // Після цього вони запам'ятовуються на пристрої. Скинути: ?reset=1
   // view: auto | land | port    night: auto | on | off | 22:00-07:00    secs: 0|1    anim: 0|1
-  var DEFAULTS = { name: 'Вінниця', lat: 49.2331, lon: 28.4682, view: 'auto', night: 'auto', secs: 0, anim: 1, queue: '' };
-  var STORE_CFG = 'wd_cfg', STORE_WX = 'wd_weather', STORE_RELOAD = 'wd_reload_day', STORE_PIN = 'wd_pin', STORE_PW = 'wd_power';
+  var DEFAULTS = { name: 'Вінниця', region: 'Вінницька область', lat: 49.2331, lon: 28.4682, view: 'auto', night: 'auto', secs: 0, anim: 1, queue: '' };
+  var STORE_CFG = 'wd_cfg', STORE_WX = 'wd_weather', STORE_RELOAD = 'wd_reload_day', STORE_PIN = 'wd_pin', STORE_PW = 'wd_power2';
 
   var WEATHER_EVERY = 10 * 60 * 1000;   // оновлення погоди раз на 10 хв
   var WEATHER_RETRY = 60 * 1000;        // повтор після помилки
@@ -238,6 +265,8 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     for (k in DEFAULTS) {
       if (DEFAULTS.hasOwnProperty(k) && q.hasOwnProperty(k)) { cfg[k] = coerce(k, q[k]); changed = true; }
     }
+    // Місто задали параметрами без області: область невідома, графік світла вимкнеться
+    if ((q.hasOwnProperty('lat') || q.hasOwnProperty('name')) && !q.hasOwnProperty('region')) cfg.region = '';
     if (changed) lsSet(STORE_CFG, JSON.stringify(cfg));
     return cfg;
   }
@@ -331,16 +360,32 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
       '&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset' +
       '&minutely_15=precipitation&wind_speed_unit=ms&timezone=auto&forecast_days=3';
   }
+  var wxTimer = null;
   function loadWeather() {
-    getJSON(weatherUrl(), function (d) {
+    if (wxTimer) { clearTimeout(wxTimer); wxTimer = null; }
+    var url = weatherUrl();
+    getJSON(url, function (d) {
+      if (url !== weatherUrl()) return;          // за цей час змінили місто
       wx = { fetchedAt: new Date().getTime(), data: d };
       lsSet(STORE_WX, JSON.stringify(wx));
       renderWeather();
-      setTimeout(loadWeather, WEATHER_EVERY);
+      wxTimer = setTimeout(loadWeather, WEATHER_EVERY);
     }, function () {
+      if (url !== weatherUrl()) return;
       renderWeather();
-      setTimeout(loadWeather, WEATHER_RETRY);
+      wxTimer = setTimeout(loadWeather, WEATHER_RETRY);
     });
+  }
+  // Після зміни міста прибираємо старі дані з екрана
+  function resetWeatherView() {
+    wx = null; sunRise = null; sunSet = null;
+    lsDel(STORE_WX);
+    setText($('city'), cfg.name); setText($('wxwarn'), '');
+    setHtml($('wxicon'), ''); setText($('temp'), '--\u00B0'); setText($('nexthour'), 'Завантаження…');
+    setText($('feels'), '--\u00B0'); setText($('wind'), '--'); setText($('hum'), '--%');
+    setHtml($('days'), '');
+    setText($('sunrise'), '--:--'); setText($('sunset'), '--:--'); setText($('daylen'), '--:--');
+    var box = $('wx'); box.className = box.className.replace(/\s*stale/g, '');
   }
 
   // Опади на найближчу годину: беремо 4 кроки по 15 хв, починаючи з поточного
@@ -484,8 +529,14 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   }
   setInterval(checkUpdate, UPDATE_CHECK_EVERY);
 
-  // ---------- Світло: графік Вінницяобленерго (відкрите дзеркало на GitHub) ----------
-  var POWER_URL = 'https://raw.githubusercontent.com/vn-progr/gpv-voe-vinnytsia/main/data/Vinnytsiaoblenerho.json';
+  // ---------- Світло: джерела графіків (провайдери) ----------
+  // Щоб підключити інший регіон, додайте об'єкт у PROVIDERS:
+  //   id, name   - код і назва оператора
+  //   queues     - черги, які можна вибрати
+  //   match(cfg) - чи підходить цей регіон (за областю з налаштувань міста)
+  //   url        - JSON з даними (потрібен дозвіл CORS)
+  //   parse(json)- повертає { updated: unix-секунди, ok: true/false,
+  //                days: { 'unix початку доби': { '6.2': [48 клітинок g/r/y по 30 хв] } } }
   var POWER_EVERY = 5 * 60 * 1000, POWER_RETRY = 60 * 1000;
   var POWER_STALE_FETCH = 30 * 60 * 1000;   // давно не вдавалось завантажити
   var POWER_STALE_SRC = 90 * 60;            // джерело саме давно не оновлювалось (секунди)
@@ -493,31 +544,57 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   // Слот = 1 година, ділимо навпіл: g світло є, r немає, y можливе відключення
   // first = відключено першу половину години, second = другу
   var CODE = { yes: 'gg', no: 'rr', first: 'rg', second: 'gr', maybe: 'yy', mfirst: 'yg', msecond: 'gy' };
-  var pw = null;
-  try { pw = JSON.parse(lsGet(STORE_PW) || 'null'); } catch (e) { pw = null; }
-
-  function loadPower() {
-    getJSON(POWER_URL + '?_=' + Math.floor(new Date().getTime() / 300000), function (d) {
-      pw = {
-        fetchedAt: new Date().getTime(),
-        data: {
-          lastUpdated: d.lastUpdated || 0,
-          days: (d.fact && d.fact.data) ? d.fact.data : {},
-          ok: !(d.lastUpdateStatus && d.lastUpdateStatus.ok === false)
-        }
-      };
-      lsSet(STORE_PW, JSON.stringify(pw));
-      renderPower();
-      setTimeout(loadPower, POWER_EVERY);
-    }, function () {
-      renderPower();
-      setTimeout(loadPower, POWER_RETRY);
-    });
-  }
   function cellsOf(slots) {
     var out = [], h, c;
     for (h = 1; h <= 24; h++) { c = CODE[slots[String(h)]] || 'gg'; out.push(c.charAt(0), c.charAt(1)); }
     return out;
+  }
+  var PROVIDERS = [{
+    id: 'voe',
+    name: 'Вінницяобленерго',
+    queues: QUEUES,
+    match: function (c) { return /вінниц/i.test(c.region || ''); },
+    url: 'https://raw.githubusercontent.com/vn-progr/gpv-voe-vinnytsia/main/data/Vinnytsiaoblenerho.json',
+    parse: function (d) {
+      var src = (d.fact && d.fact.data) ? d.fact.data : {}, out = { updated: d.lastUpdated || 0, ok: !(d.lastUpdateStatus && d.lastUpdateStatus.ok === false), days: {} }, k, q;
+      for (k in src) {
+        if (!src.hasOwnProperty(k)) continue;
+        out.days[k] = {};
+        for (q in src[k]) { if (q.indexOf('GPV') === 0) out.days[k][q.substr(3)] = cellsOf(src[k][q]); }
+      }
+      return out;
+    }
+  }];
+  function providerFor(c) {
+    var i;
+    for (i = 0; i < PROVIDERS.length; i++) { if (PROVIDERS[i].match(c)) return PROVIDERS[i]; }
+    return null;
+  }
+  var prov = providerFor(cfg), pw = null, pwTimer = null;
+  function loadPwCache() {
+    pw = null;
+    if (prov) { try { pw = JSON.parse(lsGet(STORE_PW + '_' + prov.id) || 'null'); } catch (e) { pw = null; } }
+  }
+  loadPwCache();
+
+  function loadPower() {
+    if (pwTimer) { clearTimeout(pwTimer); pwTimer = null; }
+    if (!prov) { renderPower(); return; }
+    var cur = prov;
+    getJSON(cur.url + (cur.url.indexOf('?') < 0 ? '?' : '&') + '_=' + Math.floor(new Date().getTime() / 300000), function (d) {
+      if (cur !== prov) return;
+      var n = null;
+      try { n = cur.parse(d); } catch (e) { n = null; }
+      if (!n) { renderPower(); pwTimer = setTimeout(loadPower, POWER_RETRY); return; }
+      pw = { fetchedAt: new Date().getTime(), data: n };
+      lsSet(STORE_PW + '_' + cur.id, JSON.stringify(pw));
+      renderPower();
+      pwTimer = setTimeout(loadPower, POWER_EVERY);
+    }, function () {
+      if (cur !== prov) return;
+      renderPower();
+      pwTimer = setTimeout(loadPower, POWER_RETRY);
+    });
   }
   function barHtml(cells, cur) {
     var h = '', i, c;
@@ -534,10 +611,23 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     return pad2(Math.floor(m / 60)) + ':' + pad2(m % 60) + (day ? ' (завтра)' : '');
   }
   function showStatus(text, cls) { var el = $('pstatus'); setText(el, text); if (el.className !== cls) el.className = cls; }
+  function toggleCls(el, name, on) {
+    var has = (' ' + el.className + ' ').indexOf(' ' + name + ' ') >= 0;
+    if (on && !has) el.className = (el.className + ' ' + name).replace(/^\s+/, '');
+    if (!on && has) el.className = (' ' + el.className + ' ').replace(' ' + name + ' ', ' ').replace(/^\s+|\s+$/g, '');
+  }
 
   function renderPower() {
-    var box = $('powercard'), q = cfg.queue, nowSec = new Date().getTime() / 1000;
-    var now = $('pnow');
+    var box = $('powercard'), q = cfg.queue, nowSec = new Date().getTime() / 1000, now = $('pnow');
+    toggleCls(box, 'noprov', !prov);
+    if (!prov) {
+      setText($('ptitle'), 'Світло');
+      showStatus('', 'dim');
+      toggleCls(box, 'stale', false);
+      setHtml($('pbar0'), barHtml(null, -1)); setHtml($('pbar1'), barHtml(null, -1));
+      now.style.display = 'none';
+      return;
+    }
     if (!q) {
       setText($('ptitle'), 'Світло');
       showStatus('Оберіть чергу: шестерня внизу ліворуч', 'dim');
@@ -552,19 +642,17 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     for (k in days) {
       if (days.hasOwnProperty(k)) { n = parseInt(k, 10); if (n <= nowSec && nowSec < n + 86400) todayKey = n; }
     }
-    var stale = (new Date().getTime() - pw.fetchedAt > POWER_STALE_FETCH) || (nowSec - pw.data.lastUpdated > POWER_STALE_SRC) || pw.data.ok === false;
-    var cls = box.className.replace(/\s*stale/g, '');
-    box.className = stale ? cls + ' stale' : cls;
+    toggleCls(box, 'stale', (new Date().getTime() - pw.fetchedAt > POWER_STALE_FETCH) || (nowSec - pw.data.updated > POWER_STALE_SRC) || pw.data.ok === false);
 
-    if (todayKey === null || !days[String(todayKey)]['GPV' + q]) {
+    if (todayKey === null || !days[String(todayKey)][q]) {
       showStatus('Немає графіка на сьогодні', 'dim');
       setHtml($('pbar0'), barHtml(null, -1)); setHtml($('pbar1'), barHtml(null, -1));
       now.style.display = 'none';
       return;
     }
-    var today = cellsOf(days[String(todayKey)]['GPV' + q]);
+    var today = days[String(todayKey)][q];
     var tmrDay = days[String(todayKey + 86400)];
-    var tmr = (tmrDay && tmrDay['GPV' + q]) ? cellsOf(tmrDay['GPV' + q]) : null;
+    var tmr = (tmrDay && tmrDay[q]) ? tmrDay[q] : null;
     var nowMin = (nowSec - todayKey) / 60, cur = Math.floor(nowMin / 30);
 
     setHtml($('pbar0'), barHtml(today, cur));
@@ -587,22 +675,58 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     showStatus(all[cur] === 'y' ? 'Можливе відключення' : (tmr ? 'Відключень не заплановано' : 'Сьогодні відключень немає'), all[cur] === 'y' ? 'maybe' : '');
   }
 
-  // ---------- Шестерня + PIN + вибір черги ----------
+  // ---------- Шестерня: PIN, місто, черга ----------
   // PIN лише захищає від випадкових дотиків (діти, гості); це не справжній захист
+  var GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search?name=';
+  var KB_LAND = ['йцукенгшщзхї', 'фівапролджє', 'ячсмитьбюґ'];
+  var KB_PORT = ['йцукенгшщ', 'зхїґфівап', 'ролджєячс', 'митьбю'];
   var mode = '', pinBuf = '', pinTmp = '', msg = '', fails = 0, lockUntil = 0, idleTimer = null;
+  var cityQ = '', cityRes = [], cityMsg = '', cityTimer = null, cityReq = 0;
+
+  function esc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function hashPin(pin) {
     var h = 5381, str = 'wd|' + pin, i;
     for (i = 0; i < str.length; i++) { h = ((h << 5) + h + str.charCodeAt(i)) | 0; }
     return String(h);
   }
+  function kbHtml() {
+    var rows = rootEl.className.indexOf('port') >= 0 ? KB_PORT : KB_LAND, h = '<div class="kb">', i, j, r;
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      h += '<div>';
+      for (j = 0; j < r.length; j++) h += '<span class="kk" data-k="ch:' + r.charAt(j) + '">' + r.charAt(j) + '</span>';
+      h += '</div>';
+    }
+    return h + '<div><span class="kk mid sm" data-k="cback">Назад</span><span class="kk" data-k="ch:\'">\'</span>' +
+      '<span class="kk wide sm" data-k="cspace">пробіл</span><span class="kk mid" data-k="cdel">←</span></div></div>';
+  }
   function panelHtml() {
-    var h = '', i;
+    var h = '', i, r;
     if (mode === 'settings') {
-      h += '<div class="ptitle2">Налаштування</div><div class="psub">Черга відключень</div><div class="qg">';
-      for (i = 0; i < QUEUES.length; i++) {
-        h += '<div class="q' + (QUEUES[i] === cfg.queue ? ' on' : '') + '" data-k="q:' + QUEUES[i] + '">' + QUEUES[i] + '</div>';
+      h += '<div class="ptitle2">Налаштування</div>';
+      h += '<div class="crow">Місто: <b>' + esc(cfg.name) + '</b>' + (cfg.region ? '<span class="creg"> · ' + esc(cfg.region) + '</span>' : '') +
+        '<span class="act" data-k="city">Змінити місто</span></div>';
+      if (prov) {
+        h += '<div class="psub">Черга відключень · ' + esc(prov.name) + '</div><div class="qg">';
+        for (i = 0; i < prov.queues.length; i++) {
+          h += '<div class="q' + (prov.queues[i] === cfg.queue ? ' on' : '') + '" data-k="q:' + prov.queues[i] + '">' + prov.queues[i] + '</div>';
+        }
+        h += '</div>';
+      } else {
+        h += '<div class="psub">Графік відключень для цього регіону поки не підключено</div>';
       }
-      return h + '</div><div><span class="act" data-k="chpin">Змінити PIN</span><span class="act" data-k="close">Закрити</span></div>';
+      return h + '<div><span class="act" data-k="chpin">Змінити PIN</span><span class="act" data-k="close">Закрити</span></div>';
+    }
+    if (mode === 'city') {
+      h += '<div class="ptitle2">Місто або населений пункт</div>';
+      h += '<div class="cin">' + (cityQ ? esc(cityQ) + '<span class="cur">|</span>' : '<span class="ph">Почніть вводити назву…</span>') + '</div><div class="cres">';
+      if (cityMsg) h += '<div class="cmsg">' + cityMsg + '</div>';
+      for (i = 0; i < cityRes.length; i++) {
+        r = cityRes[i];
+        h += '<div class="cr" data-k="c:' + i + '"><b>' + esc(r.name) + '</b><span>' +
+          esc([r.admin1, r.admin2].filter(function (x) { return x; }).join(', ')) + '</span></div>';
+      }
+      return h + '</div>' + kbHtml();
     }
     var titles = { enter: 'Введіть PIN', create1: 'Придумайте PIN з 4 цифр', create2: 'Повторіть PIN', newpin1: 'Новий PIN з 4 цифр', newpin2: 'Повторіть новий PIN' };
     h += '<div class="ptitle2">' + titles[mode] + '</div><div class="pdots">';
@@ -626,6 +750,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
   function closePanel() {
     ovlOpen = false; mode = ''; pinBuf = ''; msg = '';
     if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+    if (cityTimer) { clearTimeout(cityTimer); cityTimer = null; }
     $('ovl').className = '';
     $('panel')._h = null;
   }
@@ -645,11 +770,57 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     }
     pinBuf = '';
   }
+
+  // Пошук населеного пункту (Open-Meteo Geocoding)
+  function searchCity() {
+    if (cityTimer) { clearTimeout(cityTimer); cityTimer = null; }
+    var q = cityQ.replace(/^\s+|\s+$/g, '');
+    cityReq++;
+    if (q.length < 2) { cityRes = []; cityMsg = ''; return; }
+    cityMsg = 'Шукаю…';
+    var my = cityReq;
+    cityTimer = setTimeout(function () {
+      getJSON(GEO_URL + encodeURIComponent(q) + '&count=6&language=uk&countryCode=UA&format=json', function (d) {
+        if (my !== cityReq || mode !== 'city') return;
+        cityRes = d.results || [];
+        cityMsg = cityRes.length ? '' : 'Нічого не знайдено';
+        drawPanel();
+      }, function () {
+        if (my !== cityReq || mode !== 'city') return;
+        cityRes = []; cityMsg = 'Немає зв’язку із сервісом пошуку';
+        drawPanel();
+      });
+    }, 450);
+  }
+  function chooseCity(r) {
+    cfg.name = r.name; cfg.region = r.admin1 || '';
+    cfg.lat = r.latitude; cfg.lon = r.longitude;
+    saveCfg();
+    resetWeatherView();
+    prov = providerFor(cfg);
+    loadPwCache();
+    renderPower();
+    loadWeather();
+    loadPower();
+    mode = 'settings';
+  }
+
   function onKey(k) {
     armIdle();
     if (k === 'close') { closePanel(); return; }
     if (k === 'chpin') { mode = 'newpin1'; pinBuf = ''; msg = ''; drawPanel(); return; }
+    if (k === 'city') { mode = 'city'; cityQ = ''; cityRes = []; cityMsg = ''; cityReq++; drawPanel(); return; }
     if (k.indexOf('q:') === 0) { cfg.queue = k.substr(2); saveCfg(); renderPower(); drawPanel(); return; }
+    if (mode === 'city') {
+      if (k === 'cback') { mode = 'settings'; drawPanel(); return; }
+      if (k.indexOf('c:') === 0) { var r = cityRes[parseInt(k.substr(2), 10)]; if (r) chooseCity(r); drawPanel(); return; }
+      if (k === 'cdel') cityQ = cityQ.slice(0, -1);
+      else if (k === 'cspace') { if (cityQ.length < 30) cityQ += ' '; }
+      else if (k.indexOf('ch:') === 0) { if (cityQ.length < 30) cityQ += k.substr(3); }
+      searchCity();
+      drawPanel();
+      return;
+    }
     if (mode === 'enter' && new Date().getTime() < lockUntil) {
       msg = 'Зачекайте ' + Math.ceil((lockUntil - new Date().getTime()) / 1000) + ' с'; drawPanel(); return;
     }
