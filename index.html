@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.4.0">
+<meta name="app-version" content="0.5.0">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -210,7 +210,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.4.0';
+  var APP_VERSION = '0.5.0';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
@@ -549,6 +549,21 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     for (h = 1; h <= 24; h++) { c = CODE[slots[String(h)]] || 'gg'; out.push(c.charAt(0), c.charAt(1)); }
     return out;
   }
+  // Початок доби за київським часом (unix-секунди) для дати YYYY-MM-DD; літній час за правилом ЄС
+  function lastSundayUtc(y, m) { var d = new Date(Date.UTC(y, m + 1, 0, 1)); return d.getTime() - d.getUTCDay() * 86400000; }
+  function kyivIsDst(utcMs) { var y = new Date(utcMs).getUTCFullYear(); return utcMs >= lastSundayUtc(y, 2) && utcMs < lastSundayUtc(y, 9); }
+  function kyivMidnight(dateStr) {
+    var p = dateStr.split('-'), base = Date.UTC(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+    return Math.round((base - (kyivIsDst(base - 2 * 3600000) ? 3 : 2) * 3600000) / 1000);
+  }
+  // Початок назви області (з Open-Meteo) -> код регіону в агрегаторі
+  var UAPOM_REGIONS = [
+    ['київська', 'kiivska-oblast'], ['одеська', 'odeska-oblast'], ['дніпропетровська', 'dnipropetrovska-oblast'],
+    ['львівська', 'lvivska-oblast'], ['полтавська', 'poltavska-oblast'], ['черкаська', 'cherkaska-oblast'],
+    ['чернігівська', 'chernihivska-oblast'], ['харківська', 'kharkivska-oblast'], ['хмельницька', 'khmelnytska-oblast'],
+    ['івано-франківська', 'ivano-frankivska-oblast'], ['рівненська', 'rivnenska-oblast'], ['тернопільська', 'ternopilska-oblast'],
+    ['закарпатська', 'zakarpatska-oblast'], ['запорізька', 'zaporizka-oblast'], ['житомирська', 'zhytomyrska-oblast']
+  ];
   var PROVIDERS = [{
     id: 'voe',
     name: 'Вінницяобленерго',
@@ -564,6 +579,41 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
       }
       return out;
     }
+  }, {
+    // Агрегатор https://github.com/chaichuk/UA-power-outages-monitor (15 областей, пів години: 1 = світло є, 2 = немає)
+    // Можливі відключення в ньому об'єднані зі «світло є», часу оновлення в файлі немає
+    id: 'uapom',
+    name: 'UA Power Outages Monitor',
+    queues: QUEUES,
+    every: 15 * 60 * 1000,                  // файл великий (~300 КБ), тож оновлюємо рідше
+    slug: function (c) {
+      var r = (c.region || '').toLowerCase(), i;
+      for (i = 0; i < UAPOM_REGIONS.length; i++) { if (r.indexOf(UAPOM_REGIONS[i][0]) === 0) return UAPOM_REGIONS[i][1]; }
+      return '';
+    },
+    match: function (c) { return this.slug(c) !== ''; },
+    key: function (c) { return this.slug(c); },
+    url: 'https://raw.githubusercontent.com/chaichuk/UA-power-outages-monitor/main/artifacts/last-message.json',
+    parse: function (d, c) {
+      var slug = this.slug(c), regs = d.regions || [], out = { updated: 0, ok: true, days: {} }, i, q, date, reg = null, slots, cells, j, key, ts;
+      for (i = 0; i < regs.length; i++) { if (regs[i].cpu === slug) reg = regs[i]; }
+      if (!reg || !reg.schedule) return null;
+      for (q in reg.schedule) {
+        if (!reg.schedule.hasOwnProperty(q)) continue;
+        for (date in reg.schedule[q]) {
+          if (!reg.schedule[q].hasOwnProperty(date)) continue;
+          slots = reg.schedule[q][date]; cells = [];
+          for (j = 0; j < 48; j++) {
+            key = pad2(Math.floor(j / 2)) + (j % 2 ? ':30' : ':00');
+            cells.push(slots[key] === 2 ? 'r' : 'g');
+          }
+          ts = String(kyivMidnight(date));
+          if (!out.days[ts]) out.days[ts] = {};
+          out.days[ts][q] = cells;
+        }
+      }
+      return out;
+    }
   }];
   function providerFor(c) {
     var i;
@@ -571,27 +621,28 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     return null;
   }
   var prov = providerFor(cfg), pw = null, pwTimer = null;
+  function provKey() { return prov ? prov.id + ':' + (prov.key ? prov.key(cfg) : '') : ''; }
   function loadPwCache() {
     pw = null;
-    if (prov) { try { pw = JSON.parse(lsGet(STORE_PW + '_' + prov.id) || 'null'); } catch (e) { pw = null; } }
+    if (prov) { try { pw = JSON.parse(lsGet(STORE_PW + '_' + provKey()) || 'null'); } catch (e) { pw = null; } }
   }
   loadPwCache();
 
   function loadPower() {
     if (pwTimer) { clearTimeout(pwTimer); pwTimer = null; }
     if (!prov) { renderPower(); return; }
-    var cur = prov;
+    var cur = prov, curKey = provKey(), every = cur.every || POWER_EVERY;
     getJSON(cur.url + (cur.url.indexOf('?') < 0 ? '?' : '&') + '_=' + Math.floor(new Date().getTime() / 300000), function (d) {
-      if (cur !== prov) return;
+      if (curKey !== provKey()) return;            // за цей час змінили місто або регіон
       var n = null;
-      try { n = cur.parse(d); } catch (e) { n = null; }
+      try { n = cur.parse(d, cfg); } catch (e) { n = null; }
       if (!n) { renderPower(); pwTimer = setTimeout(loadPower, POWER_RETRY); return; }
       pw = { fetchedAt: new Date().getTime(), data: n };
-      lsSet(STORE_PW + '_' + cur.id, JSON.stringify(pw));
+      lsSet(STORE_PW + '_' + curKey, JSON.stringify(pw));
       renderPower();
-      pwTimer = setTimeout(loadPower, POWER_EVERY);
+      pwTimer = setTimeout(loadPower, every);
     }, function () {
-      if (cur !== prov) return;
+      if (curKey !== provKey()) return;
       renderPower();
       pwTimer = setTimeout(loadPower, POWER_RETRY);
     });
@@ -642,7 +693,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     for (k in days) {
       if (days.hasOwnProperty(k)) { n = parseInt(k, 10); if (n <= nowSec && nowSec < n + 86400) todayKey = n; }
     }
-    toggleCls(box, 'stale', (new Date().getTime() - pw.fetchedAt > POWER_STALE_FETCH) || (nowSec - pw.data.updated > POWER_STALE_SRC) || pw.data.ok === false);
+    toggleCls(box, 'stale', (new Date().getTime() - pw.fetchedAt > POWER_STALE_FETCH + (prov.every || 0)) || (pw.data.updated > 0 && nowSec - pw.data.updated > POWER_STALE_SRC) || pw.data.ok === false);
 
     if (todayKey === null || !days[String(todayKey)][q]) {
       showStatus('Немає графіка на сьогодні', 'dim');
