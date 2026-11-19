@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.10.0">
+<meta name="app-version" content="0.10.1">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -253,12 +253,13 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.10.0';
+  var APP_VERSION = '0.10.1';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
   // Після цього вони запам'ятовуються на пристрої. Скинути: ?reset=1
   // map: auto | strip | region | country   alerts: off | calm | own | other
+  //   (на мапі: червоний — тривога майже в усій області, помаранчевий — у частині, жовтий — нижчий рівень)
   //   off = реальні дані (якщо задано aurl), calm/own/other = тестові сценарії
   // aurl = адреса проксі тривог (Google Apps Script, https://script.google.com/…/exec), rid = id свого району (необов'язково)
   // view: auto | land | port    night: auto | on | off | 22:00-07:00    secs: 0|1    anim: 0|1
@@ -656,7 +657,7 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
   function mapSvg(level, a, hRem) {
     var oi = a.oi, ids = [], i, k, b, x0, y0, x1, y1, pad = 14, vb, w, h, fills, strokeW, out = '', dot, g, cx, cy, sc, lab = '';
     var night = rootEl.className.indexOf('night') >= 0;
-    var C0 = night ? '#1b2433' : '#2c3e60', C1 = night ? '#8c2f33' : '#e5484d', C2 = night ? '#8a5a1f' : '#f08a24', BG = night ? '#0b0f15' : '#142038', OWN = night ? '#8b949e' : '#ffffff';
+    var C0 = night ? '#1b2433' : '#2c3e60', C1 = night ? '#8c2f33' : '#e5484d', C2 = night ? '#8a5a1f' : '#f08a24', C3 = night ? '#6b6020' : '#d9b81c', BG = night ? '#0b0f15' : '#142038', OWN = night ? '#8b949e' : '#ffffff';
     if (level === 'region' && oi >= 0) { ids = [oi].concat(GEO[oi][2]); }
     else { for (i = 0; i < GEO.length; i++) ids.push(i); level = 'country'; }
     x0 = 1e9; y0 = 1e9; x1 = -1e9; y1 = -1e9;
@@ -667,12 +668,12 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     strokeW = Math.max(0.6, 0.11 / sc);              // ~0.11rem лінія
     for (k = 0; k < ids.length; k++) {
       i = ids[k];
-      fills = a.st[i] === 1 ? C1 : (a.st[i] === 2 ? C2 : C0);
+      fills = a.st[i] === 1 ? C1 : (a.st[i] === 2 ? C2 : (a.st[i] === 3 ? C3 : C0));
       if (i === oi) continue;
       out += '<path d="' + GEO[i][1] + '" fill="' + fills + '" stroke="' + BG + '" stroke-width="' + strokeW + '" stroke-linejoin="round"/>';
     }
     if (oi >= 0) {
-      fills = a.st[oi] === 1 ? C1 : (a.st[oi] === 2 ? C2 : C0);
+      fills = a.st[oi] === 1 ? C1 : (a.st[oi] === 2 ? C2 : (a.st[oi] === 3 ? C3 : C0));
       out += '<path d="' + GEO[oi][1] + '" fill="' + fills + '" stroke="' + OWN + '" stroke-width="' + (strokeW * 2.4) + '" stroke-linejoin="round"/>';
     }
     if (level === 'region' && w * sc >= 22) {          // підписи лише коли мапа велика
