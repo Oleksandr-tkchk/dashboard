@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.10.1">
+<meta name="app-version" content="0.10.2">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -253,7 +253,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.10.1';
+  var APP_VERSION = '0.10.2';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
@@ -612,7 +612,7 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
   // ---------- Тривоги: реальні дані з проксі (Apps Script -> ukrainealarm.com) ----------
   var ALERT_EVERY = 20 * 1000;      // як часто питати проксі
   var ALERT_STALE = 100;            // секунд без свіжих даних -> «немає звʼязку»
-  var live = null, alertBusy = false;
+  var live = null, alertBusy = false, liveErr = '';
   function liveOn() { return !!cfg.aurl && String(cfg.alerts) === 'off'; }
   function loadAlerts() {
     var url, now;
@@ -622,11 +622,12 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     getJSON(url, function (r) {
       var st = {}, k, i;
       alertBusy = false;
-      if (!r || r.ok !== true || !r.st) return;
+      if (!r || r.ok !== true || !r.st) { liveErr = (r && r.error) ? String(r.error) : 'відповідь без даних'; renderAlerts(); return; }
+      liveErr = '';
       for (k in r.st) { if (r.st.hasOwnProperty(k)) { i = geoIndex(k); if (i >= 0 && (!st[i] || r.st[k] < st[i])) st[i] = r.st[k]; } }
       live = { at: new Date().getTime() / 1000, st: st, own: r.own ? 1 : 0, since: r.since || 0, lastEnd: r.lastEnd || 0 };
       renderAlerts();
-    }, function () { alertBusy = false; renderAlerts(); });
+    }, function () { alertBusy = false; liveErr = 'скрипт не відповідає (адреса, доступ «Усі»?)'; renderAlerts(); });
   }
   setInterval(loadAlerts, ALERT_EVERY);
 
@@ -634,7 +635,7 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     var m = String(cfg.alerts), oi = geoIndex(cfg.region), st = {}, i, nb, o = { src: 'off', st: st, own: 0, since: 0, lastEnd: 0, oi: oi }, now = new Date().getTime() / 1000;
     if (m === 'off') {
       if (!cfg.aurl) return o;
-      if (!live) { o.src = 'wait'; return o; }
+      if (!live) { o.src = 'wait'; o.err = liveErr; return o; }
       o.st = live.st; o.own = live.own; o.since = live.since; o.lastEnd = live.lastEnd; o.at = live.at;
       o.src = (now - live.at > ALERT_STALE) ? 'stale' : 'live';
       return o;
@@ -727,7 +728,7 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
       cls += ' dim'; stat = 'Дані про тривоги не підключено';
       head = 'Тест мапи: шестерня, «Вигляд і тривоги»';
     } else if (a.src === 'wait') {
-      cls += ' dim'; stat = 'Тривоги: завантаження…'; other = [];
+      cls += ' dim'; stat = a.err ? 'Тривоги: помилка' : 'Тривоги: завантаження…'; sub = a.err ? '· ' + a.err.substr(0, 70) : ''; other = [];
     } else if (a.src === 'stale') {
       cls += ' dim'; stat = 'Немає звʼязку з тривогами'; sub = '· дані з ' + hhmm(a.at); head = 'Дані про тривоги застаріли';
     } else if (a.own) {
