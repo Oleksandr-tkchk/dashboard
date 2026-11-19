@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.9.2">
+<meta name="app-version" content="0.10.0">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -253,14 +253,16 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.9.2';
+  var APP_VERSION = '0.10.0';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
   // Після цього вони запам'ятовуються на пристрої. Скинути: ?reset=1
-  // map: auto | strip | region | country   alerts: off | calm | own | other (тестові дані)
+  // map: auto | strip | region | country   alerts: off | calm | own | other
+  //   off = реальні дані (якщо задано aurl), calm/own/other = тестові сценарії
+  // aurl = адреса проксі тривог (Google Apps Script, https://script.google.com/…/exec), rid = id свого району (необов'язково)
   // view: auto | land | port    night: auto | on | off | 22:00-07:00    secs: 0|1    anim: 0|1
-  var DEFAULTS = { name: 'Вінниця', region: 'Вінницька область', lat: 49.2331, lon: 28.4682, view: 'auto', night: 'auto', secs: 0, anim: 1, queue: '', map: 'auto', alerts: 'off' };
+  var DEFAULTS = { name: 'Вінниця', region: 'Вінницька область', lat: 49.2331, lon: 28.4682, view: 'auto', night: 'auto', secs: 0, anim: 1, queue: '', map: 'auto', alerts: 'off', aurl: '', rid: '' };
   var STORE_CFG = 'wd_cfg', STORE_WX = 'wd_weather', STORE_RELOAD = 'wd_reload_day', STORE_PIN = 'wd_pin', STORE_PW = 'wd_power2';
 
   var WEATHER_EVERY = 10 * 60 * 1000;   // оновлення погоди раз на 10 хв
@@ -295,6 +297,8 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
     if (k === 'lat' || k === 'lon') { var f = parseFloat(v); return isNaN(f) ? DEFAULTS[k] : f; }
     if (k === 'secs' || k === 'anim') { return parseInt(v, 10) ? 1 : 0; }
     if (k === 'queue') { return /^[1-6]\.[12]$/.test(v) ? v : ''; }
+    if (k === 'aurl') { return /^https:\/\/script\.google\.com\/[A-Za-z0-9_\/.\-]+$/.test(v) ? v : ''; }
+    if (k === 'rid') { return /^\d{1,12}$/.test(v) ? v : ''; }
     return v;
   }
   function loadCfg() {
@@ -604,9 +608,36 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
   }
   // Стан тривог: { src: 'off'|'demo', st: {індекс області: 1 (тривога) | 2 (частково)}, own: 0|1, since: початок тривоги, lastEnd: кінець останньої тривоги (unix-секунди) }
   // Тут же підключатиметься справжнє джерело (ukrainealarm / alerts.in.ua): достатньо повернути такий самий об'єкт.
+  // ---------- Тривоги: реальні дані з проксі (Apps Script -> ukrainealarm.com) ----------
+  var ALERT_EVERY = 20 * 1000;      // як часто питати проксі
+  var ALERT_STALE = 100;            // секунд без свіжих даних -> «немає звʼязку»
+  var live = null, alertBusy = false;
+  function liveOn() { return !!cfg.aurl && String(cfg.alerts) === 'off'; }
+  function loadAlerts() {
+    var url, now;
+    if (!liveOn() || alertBusy) return;
+    alertBusy = true; now = new Date().getTime();
+    url = cfg.aurl + (cfg.aurl.indexOf('?') < 0 ? '?' : '&') + 'region=' + encodeURIComponent(cfg.region || '') + (cfg.rid ? '&rid=' + cfg.rid : '') + '&_=' + now;
+    getJSON(url, function (r) {
+      var st = {}, k, i;
+      alertBusy = false;
+      if (!r || r.ok !== true || !r.st) return;
+      for (k in r.st) { if (r.st.hasOwnProperty(k)) { i = geoIndex(k); if (i >= 0 && (!st[i] || r.st[k] < st[i])) st[i] = r.st[k]; } }
+      live = { at: new Date().getTime() / 1000, st: st, own: r.own ? 1 : 0, since: r.since || 0, lastEnd: r.lastEnd || 0 };
+      renderAlerts();
+    }, function () { alertBusy = false; renderAlerts(); });
+  }
+  setInterval(loadAlerts, ALERT_EVERY);
+
   function alertState() {
     var m = String(cfg.alerts), oi = geoIndex(cfg.region), st = {}, i, nb, o = { src: 'off', st: st, own: 0, since: 0, lastEnd: 0, oi: oi }, now = new Date().getTime() / 1000;
-    if (m === 'off') return o;
+    if (m === 'off') {
+      if (!cfg.aurl) return o;
+      if (!live) { o.src = 'wait'; return o; }
+      o.st = live.st; o.own = live.own; o.since = live.since; o.lastEnd = live.lastEnd; o.at = live.at;
+      o.src = (now - live.at > ALERT_STALE) ? 'stale' : 'live';
+      return o;
+    }
     o.src = 'demo'; o.lastEnd = now - (3 * 3600 + 12 * 60);
     nb = oi >= 0 ? GEO[oi][2] : [];
     if (m === 'own') {
@@ -689,23 +720,29 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     if (level === 'auto') level = 'country';
     if (level === 'region' && a.oi < 0) level = 'country';
     other = namesOf(a, 1);
+    var shown = (a.src === 'live' || a.src === 'demo');
+    if (a.src === 'stale') other = [];
     if (a.src === 'off') {
       cls += ' dim'; stat = 'Дані про тривоги не підключено';
       head = 'Тест мапи: шестерня, «Вигляд і тривоги»';
+    } else if (a.src === 'wait') {
+      cls += ' dim'; stat = 'Тривоги: завантаження…'; other = [];
+    } else if (a.src === 'stale') {
+      cls += ' dim'; stat = 'Немає звʼязку з тривогами'; sub = '· дані з ' + hhmm(a.at); head = 'Дані про тривоги застаріли';
     } else if (a.own) {
-      cls += ' alarm'; stat = 'ТРИВОГА'; sub = '· триває ' + durText(now - a.since) + ' (з ' + hhmm(a.since) + ')';
+      cls += ' alarm'; stat = 'ТРИВОГА'; sub = '· триває ' + (a.since ? durText(now - a.since) + ' (з ' + hhmm(a.since) + ')' : 'зараз');
     } else {
-      stat = 'Тривоги немає'; sub = '· вже ' + durText(now - a.lastEnd);
+      stat = 'Тривоги немає'; sub = a.lastEnd ? '· вже ' + durText(now - a.lastEnd) : '';
     }
-    if (a.src !== 'off') {
+    if (shown) {
       head = other.length ? (a.own ? 'Тривога також' : 'Тривога в областях') + ' (' + other.length + ')' : 'В інших областях спокійно';
     }
     if (level !== 'strip') {
       m = mapSvg(level, a, availH);
-      var listNeed = (other.length && a.src !== 'off') ? 7 : 0;      // скільки місця лишити під список областей
+      var listNeed = other.length ? 7 : 0;      // скільки місця лишити під список областей
       if (m.w > availW - listNeed) m = mapSvg(level, a, availH * (availW - listNeed) / m.w);
       mapW = m.w; mh = m.svg; listW = availW - mapW;
-      if (listW >= 6 && other.length && a.src !== 'off') lh = listHtml(other, a.own, listW - 1.2, availH - 0.6);
+      if (listW >= 6 && other.length) lh = listHtml(other, a.own, listW - 1.2, availH - 0.6);
     } else { big = true; }
     if (card.className !== cls) card.className = cls;
     var sc = $('statuscard'); if (sc.className !== cls) sc.className = cls;
@@ -1032,7 +1069,7 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
       h += optRow('Вигляд', 'v', cfg.view, [['auto', 'Авто'], ['land', 'Горизонтально'], ['port', 'Вертикально']]);
       h += optRow('Нічний режим', 'n', cfg.night, [['auto', 'Авто'], ['on', 'Завжди'], ['off', 'Ніколи']]);
       h += optRow('Мапа тривог', 'm', cfg.map, [['auto', 'Авто'], ['strip', 'Без мапи'], ['region', 'Область'], ['country', 'Країна']]);
-      h += optRow('Тривоги (тест)', 'a', cfg.alerts, [['off', 'Не підключено'], ['calm', 'Спокійно'], ['own', 'У моєму регіоні'], ['other', 'В інших']]);
+      h += optRow(cfg.aurl ? 'Тривоги' : 'Тривоги (тест)', 'a', cfg.alerts, [['off', cfg.aurl ? 'Реальні дані' : 'Не підключено'], ['calm', 'Спокійно'], ['own', 'У моєму регіоні'], ['other', 'В інших']]);
       h += '<div><span class="act" data-k="sback">Назад</span><span class="act" data-k="close">Закрити</span></div>';
       return h + '<div class="attr">Межі областей: © учасники OpenStreetMap</div>';
     }
@@ -1134,7 +1171,7 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     if (mode === 'more' && k.charAt(1) === ':') {
       var kk = k.charAt(0), vv = k.substr(2);
       if (kk === 'v') cfg.view = vv; else if (kk === 'n') cfg.night = vv; else if (kk === 'm') cfg.map = vv; else if (kk === 'a') cfg.alerts = vv;
-      saveCfg(); rootEl._fs = null; rootEl._lk = null; applyClasses(new Date()); renderAlerts(); drawPanel(); return;
+      saveCfg(); rootEl._fs = null; rootEl._lk = null; applyClasses(new Date()); renderAlerts(); loadAlerts(); drawPanel(); return;
     }
     if (k.indexOf('q:') === 0) { cfg.queue = k.substr(2); saveCfg(); renderPower(); drawPanel(); return; }
     if (mode === 'city') {
@@ -1233,6 +1270,7 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
   tick();
   loadWeather();
   loadPower();
+  loadAlerts();
   lockScreen();
 })();
 </script>
