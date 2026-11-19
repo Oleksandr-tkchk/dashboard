@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.11.0">
+<meta name="app-version" content="0.12.0">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -253,7 +253,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.11.0';
+  var APP_VERSION = '0.12.0';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
@@ -616,6 +616,18 @@ var GEO = [["Вінницька область","M302.7 311.4 301 317.5 299.8 31
   var ALERT_STALE = 100;            // секунд без свіжих даних -> «немає звʼязку»
   var live = null, alertBusy = false, liveErr = '';
   function liveOn() { return !!cfg.aurl && String(cfg.alerts) === 'off'; }
+  // Контури громад: окремий файл, вантажиться один раз, коли в тривогах з'являються громади
+  var HR_KEY = null, hrState = 0;      // hrState: 0 — не вантажили, 1 — вантажимо, 2 — готово, 3 — не вдалося
+  function loadHromady() {
+    if (hrState === 1 || hrState === 2) return;
+    hrState = 1;
+    getJSON('hromady.json?v=' + APP_VERSION, function (rows) {
+      var i, m = {};
+      for (i = 0; i < rows.length; i++) m[rows[i][0] + '|' + rows[i][1] + '|' + rows[i][2]] = rows[i][3];
+      HR_KEY = m; hrState = 2; renderAlerts();
+    }, function () { hrState = 3; });
+  }
+
   function loadAlerts() {
     var url, now;
     if (!liveOn() || alertBusy) return;
@@ -630,18 +642,21 @@ var GEO = [["Вінницька область","M302.7 311.4 301 317.5 299.8 31
       var dt = null, od = -1, ri;
       if (r.d) { dt = {}; for (k in r.d) { if (r.d.hasOwnProperty(k) && RAI_KEY.hasOwnProperty(k)) { ri = RAI_KEY[k]; if (!dt[ri] || r.d[k] < dt[ri]) dt[ri] = r.d[k]; } } }
       if (r.od && RAI_KEY.hasOwnProperty(r.od)) od = RAI_KEY[r.od];
-      live = { at: new Date().getTime() / 1000, st: st, dt: dt, od: od, own: r.own ? 1 : 0, since: r.since || 0, lastEnd: r.lastEnd || 0 };
+      var ct = null, ck, cn = 0;
+      if (r.c) { ct = r.c; for (ck in ct) { if (ct.hasOwnProperty(ck)) cn++; } }
+      if (cn && hrState !== 2) { if (hrState === 3) hrState = 0; loadHromady(); }
+      live = { at: new Date().getTime() / 1000, st: st, dt: dt, ct: ct, od: od, own: r.own ? 1 : 0, since: r.since || 0, lastEnd: r.lastEnd || 0 };
       renderAlerts();
     }, function () { alertBusy = false; liveErr = 'скрипт не відповідає (адреса, доступ «Усі»?)'; renderAlerts(); });
   }
   setInterval(loadAlerts, ALERT_EVERY);
 
   function alertState() {
-    var m = String(cfg.alerts), oi = geoIndex(cfg.region), st = {}, i, nb, o = { src: 'off', st: st, dt: null, od: -1, own: 0, since: 0, lastEnd: 0, oi: oi }, now = new Date().getTime() / 1000;
+    var m = String(cfg.alerts), oi = geoIndex(cfg.region), st = {}, i, nb, o = { src: 'off', st: st, dt: null, ct: null, od: -1, own: 0, since: 0, lastEnd: 0, oi: oi }, now = new Date().getTime() / 1000;
     if (m === 'off') {
       if (!cfg.aurl) return o;
       if (!live) { o.src = 'wait'; o.err = liveErr; return o; }
-      o.st = live.st; o.dt = live.dt; o.od = live.od; o.own = live.own; o.since = live.since; o.lastEnd = live.lastEnd; o.at = live.at;
+      o.st = live.st; o.dt = live.dt; o.ct = live.ct; o.od = live.od; o.own = live.own; o.since = live.since; o.lastEnd = live.lastEnd; o.at = live.at;
       o.src = (now - live.at > ALERT_STALE) ? 'stale' : 'live';
       return o;
     }
@@ -681,7 +696,7 @@ var GEO = [["Вінницька область","M302.7 311.4 301 317.5 299.8 31
     w = x1 - x0; h = y1 - y0;
     sc = hRem / h;                                   // rem на одиницю мапи
     strokeW = Math.max(0.6, 0.11 / sc);              // ~0.11rem лінія
-    var sw = 0.8 / sc;                               // період штрихування (~0.8rem)
+    var sw = 0.5 / sc;                               // період штрихування (~0.8rem)
     var defs = '<defs>' + hatch('hR', sw, C0, C1) + hatch('hY', sw, C0, C3) + '</defs>';
     function fillOf(v) { return v === 1 ? C1 : (v === 2 ? 'url(#hR)' : (v === 3 ? C3 : (v === 4 ? 'url(#hY)' : C0))); }
     // 1) райони: заливка за рівнем тривоги, тонка межа
@@ -689,6 +704,14 @@ var GEO = [["Вінницька область","M302.7 311.4 301 317.5 299.8 31
       var rl = RAI_BY[ids[k]] || [];
       for (var q = 0; q < rl.length; q++) {
         out += '<path d="' + RAI[rl[q]][2] + '" fill="' + fillOf(raionLevel(a, rl[q])) + '" stroke="' + BG + '" stroke-width="' + (strokeW * 0.55) + '" stroke-linejoin="round"/>';
+      }
+    }
+    // 1б) громади з тривогою: точний контур поверх штрихування району
+    if (a.ct && HR_KEY) {
+      for (var ck in a.ct) {
+        if (a.ct.hasOwnProperty(ck) && HR_KEY.hasOwnProperty(ck)) {
+          out += '<path d="' + HR_KEY[ck] + '" fill="' + fillOf(a.ct[ck]) + '" stroke="' + BG + '" stroke-width="' + (strokeW * 0.4) + '" stroke-linejoin="round"/>';
+        }
       }
     }
     // 2) межі областей поверх районів (без заливки)
@@ -1099,7 +1122,7 @@ var GEO = [["Вінницька область","M302.7 311.4 301 317.5 299.8 31
       h += optRow('Мапа тривог', 'm', cfg.map, [['auto', 'Авто'], ['strip', 'Без мапи'], ['region', 'Область'], ['country', 'Країна']]);
       h += optRow(cfg.aurl ? 'Тривоги' : 'Тривоги (тест)', 'a', cfg.alerts, [['off', cfg.aurl ? 'Реальні дані' : 'Не підключено'], ['calm', 'Спокійно'], ['own', 'У моєму регіоні'], ['other', 'В інших']]);
       h += '<div><span class="act" data-k="sback">Назад</span><span class="act" data-k="close">Закрити</span></div>';
-      return h + '<div class="attr">Межі районів і областей: OCHA / HDX, набір COD-AB (ДНВП «Картографія»)</div>';
+      return h + '<div class="attr">Межі областей, районів і громад: OCHA / HDX, набір COD-AB (ДНВП «Картографія»)</div>';
     }
     if (mode === 'city') {
       h += '<div class="ptitle2">Місто або населений пункт</div>';
