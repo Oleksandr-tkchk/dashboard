@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.10.2">
+<meta name="app-version" content="0.10.3">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -253,13 +253,13 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.10.2';
+  var APP_VERSION = '0.10.3';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
   // Після цього вони запам'ятовуються на пристрої. Скинути: ?reset=1
   // map: auto | strip | region | country   alerts: off | calm | own | other
-  //   (на мапі: червоний — тривога майже в усій області, помаранчевий — у частині, жовтий — нижчий рівень)
+  //   (на мапі: червоний — тривога майже в усій області, помаранчевий — у частині, жовтий — нижчий рівень; штрихування — лише частина області)
   //   off = реальні дані (якщо задано aurl), calm/own/other = тестові сценарії
   // aurl = адреса проксі тривог (Google Apps Script, https://script.google.com/…/exec), rid = id свого району (необов'язково)
   // view: auto | land | port    night: auto | on | off | 22:00-07:00    secs: 0|1    anim: 0|1
@@ -655,6 +655,11 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     delete st[-1];
     return o;
   }
+  // Штрихування для «часткової» тривоги: фон + діагональні смуги
+  function hatch(id, w, bg, fg) {
+    return '<pattern id="' + id + '" width="' + w + '" height="' + w + '" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +
+      '<rect width="' + w + '" height="' + w + '" fill="' + bg + '"/><rect width="' + (w * 0.5) + '" height="' + w + '" fill="' + fg + '"/></pattern>';
+  }
   function mapSvg(level, a, hRem) {
     var oi = a.oi, ids = [], i, k, b, x0, y0, x1, y1, pad = 14, vb, w, h, fills, strokeW, out = '', dot, g, cx, cy, sc, lab = '';
     var night = rootEl.className.indexOf('night') >= 0;
@@ -667,14 +672,17 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     w = x1 - x0; h = y1 - y0;
     sc = hRem / h;                                   // rem на одиницю мапи
     strokeW = Math.max(0.6, 0.11 / sc);              // ~0.11rem лінія
+    var sw = 0.8 / sc;                               // період штрихування (~0.8rem)
+    var defs = '<defs>' + hatch('hR', sw, C0, C1) + hatch('hY', sw, C0, C3) + '</defs>';
+    function fillOf(v) { return v === 1 ? C1 : (v === 2 ? 'url(#hR)' : (v === 3 ? C3 : (v === 4 ? 'url(#hY)' : C0))); }
     for (k = 0; k < ids.length; k++) {
       i = ids[k];
-      fills = a.st[i] === 1 ? C1 : (a.st[i] === 2 ? C2 : (a.st[i] === 3 ? C3 : C0));
+      fills = fillOf(a.st[i]);
       if (i === oi) continue;
       out += '<path d="' + GEO[i][1] + '" fill="' + fills + '" stroke="' + BG + '" stroke-width="' + strokeW + '" stroke-linejoin="round"/>';
     }
     if (oi >= 0) {
-      fills = a.st[oi] === 1 ? C1 : (a.st[oi] === 2 ? C2 : (a.st[oi] === 3 ? C3 : C0));
+      fills = fillOf(a.st[oi]);
       out += '<path d="' + GEO[oi][1] + '" fill="' + fills + '" stroke="' + OWN + '" stroke-width="' + (strokeW * 2.4) + '" stroke-linejoin="round"/>';
     }
     if (level === 'region' && w * sc >= 22) {          // підписи лише коли мапа велика
@@ -686,7 +694,7 @@ var GEO = [["Вінницька область","M325.8 210.9 336.9 211.1 337.8 
     cx = (cfg.lon - 22) * GEO_C; cy = (52.6 - cfg.lat) * 70;
     dot = '<circle cx="' + cx + '" cy="' + cy + '" r="' + (0.45 / sc) + '" fill="' + OWN + '" stroke="' + BG + '" stroke-width="' + (0.14 / sc) + '"/>';
     vb = x0 + ' ' + y0 + ' ' + w + ' ' + h;
-    return { w: w * sc, svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '" width="' + (w * sc) + 'rem" height="' + hRem + 'rem" style="width:' + (w * sc) + 'rem;height:' + hRem + 'rem" font-family="sans-serif">' + out + lab + dot + '</svg>' };
+    return { w: w * sc, svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="' + vb + '" width="' + (w * sc) + 'rem" height="' + hRem + 'rem" style="width:' + (w * sc) + 'rem;height:' + hRem + 'rem" font-family="sans-serif">' + defs + out + lab + dot + '</svg>' };
   }
   function namesOf(a, kind) {
     var list = [], i, nb = a.oi >= 0 ? GEO[a.oi][2] : [], seen = {};
