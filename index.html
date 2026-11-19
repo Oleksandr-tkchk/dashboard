@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.9.1">
+<meta name="app-version" content="0.9.2">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -44,8 +44,8 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 #temp{font-size:5.4rem;font-weight:300;line-height:1;margin-left:1rem;white-space:nowrap}
 #nexthour{font-size:1.6rem;color:#d7e6ff;margin-top:.1rem;min-height:1.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #wxdetails{display:flex;flex-direction:column;margin-left:auto;padding-left:1rem}
-.stat{font-size:1.2rem;color:#d7e6ff;white-space:nowrap;line-height:1.8rem}
-.stat b{display:inline-block;min-width:4.4rem;text-align:right;margin-right:.5rem;font-size:1.9rem;font-weight:400;color:#fff}
+.stat{display:flex;align-items:baseline;font-size:1.2rem;color:#d7e6ff;white-space:nowrap;line-height:1.8rem}
+.stat b{display:inline-block;width:5rem;text-align:left;margin-right:.5rem;font-size:1.9rem;font-weight:400;color:#fff}
 #days{margin-top:.4rem;padding-top:.3rem;border-top:1px solid rgba(255,255,255,.25)}
 .day{display:flex;align-items:center;height:2.5rem;font-size:2rem}
 .dayname{flex:1}
@@ -253,7 +253,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.9.1';
+  var APP_VERSION = '0.9.2';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
