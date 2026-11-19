@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>Дашборд</title>
 <!-- Версія сторінки: змінюється при кожному оновленні, за нею телефон розуміє, що треба перезавантажитись -->
-<meta name="app-version" content="0.12.0">
+<meta name="app-version" content="0.12.1">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a111d">
@@ -60,6 +60,9 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 #status{position:absolute;right:1.4rem;bottom:.25rem;font-size:1.05rem;color:#8da2c4;opacity:.55}
 /* Блок «Повітряна тривога» */
 #ahead{position:absolute;left:1.2rem;top:.6rem;z-index:1;font-size:1.15rem;line-height:1.2;color:#8da2c4;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+#aupd{position:absolute;right:1rem;top:.6rem;z-index:1;font-size:1.05rem;line-height:1.2;color:#6b7a93;white-space:nowrap}
+#alertcard.dim #aupd{color:#c98a8a}
+.night #aupd{color:#4a525d}
 #alertcard.alarm #ahead{color:#d9a9a9}
 .night #ahead{color:#5d6672}
 #alertcard{position:relative;flex:1 1 0;min-height:0;margin-top:.7rem;padding:1.9rem 1rem .5rem 1.2rem;overflow:hidden;display:flex;flex-direction:column}
@@ -217,7 +220,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
       </div>
       </div>
       <div class="card" id="alertcard">
-        <div id="ahead"></div>
+        <div id="ahead"></div><div id="aupd"></div>
         <div id="amain"><div id="amap"></div><div id="alist"></div></div>
       </div>
     </div>
@@ -253,7 +256,7 @@ body{font-family:Roboto,"Helvetica Neue",Arial,sans-serif}
 (function () {
   'use strict';
 
-  var APP_VERSION = '0.12.0';
+  var APP_VERSION = '0.12.1';
 
   // ---------- Налаштування ----------
   // Їх можна змінити параметрами в посиланні, один раз: ?name=Вінниця&lat=49.2331&lon=28.4682
@@ -743,6 +746,7 @@ var GEO = [["Вінницька область","M302.7 311.4 301 317.5 299.8 31
     for (i = 0; i < GEO.length; i++) { if (a.st[i] === kind && i !== a.oi && !seen[i]) { list.push(geoLabel(GEO[i][0])); seen[i] = 1; } }
     return list;
   }
+  function hhmms(sec) { var d = new Date(sec * 1000); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()); }
   function hhmm(sec) { var d = new Date(sec * 1000); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
   function durText(sec) {
     var m = Math.max(0, Math.floor(sec / 60));
@@ -801,6 +805,7 @@ var GEO = [["Вінницька область","M302.7 311.4 301 317.5 299.8 31
     var am = $('amap'); am.style.display = m ? 'block' : 'none'; setHtml(am, mh);
     var al = $('alist'); al.className = big ? 'big' : ''; setHtml(al, lh);
     setText($('ahead'), head);
+    setText($('aupd'), (a.src === 'live' || a.src === 'stale') && a.at ? 'оновлено ' + hhmms(a.at) : '');
   }
 
   // ---------- Світло: джерела графіків (провайдери) ----------
